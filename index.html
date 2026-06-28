@@ -544,14 +544,39 @@ $$('.nav button').forEach(b=>b.onclick=()=>{
 // ============ FIREBASE LOAD ============
 function waitFB(){ return new Promise(r=>{ const i=setInterval(()=>{ if(window._db){clearInterval(i);r(window._db)} },50) }) }
 
+// ============ LOCAL CACHE (instant + offline) ============
+const LS = {
+  get(k, fb){ try{ const v=localStorage.getItem('vp_'+k); return v?JSON.parse(v):fb; }catch{ return fb; } },
+  set(k, v){ try{ localStorage.setItem('vp_'+k, JSON.stringify(v)); }catch{} }
+};
+
+// 1) Hydrate instantly from local cache so UI never waits
+STATE.items     = LS.get('items', {});
+STATE.customers = LS.get('customers', {});
+STATE.invoices  = LS.get('invoices', {});
+STATE.settings  = LS.get('settings', {name:'الصيدلية البيطرية',phone:'',addr:'',curr:'جنيه'});
+const _csCache  = LS.get('cats', null);
+const _unCache  = LS.get('units', null);
+STATE.cats  = (Array.isArray(_csCache)&&_csCache.length) ? Array.from(new Set([...DEFAULT_CATS, ..._csCache])) : DEFAULT_CATS.slice();
+STATE.units = (Array.isArray(_unCache)&&_unCache.length) ? Array.from(new Set([...DEFAULT_UNITS, ..._unCache])) : DEFAULT_UNITS.slice();
+LS.set('cats', STATE.cats); LS.set('units', STATE.units);
+
+document.addEventListener('DOMContentLoaded',()=>{
+  applySettings();
+  renderCatChips(); renderCatList(); fillCatSelect();
+  renderUnitList(); fillUnitSelect();
+  renderAll();
+});
+
+// 2) Sync with Firebase in the background and update cache on each change
 (async ()=>{
   const {db, ref, onValue} = await waitFB();
-  onValue(ref(db,'items'),s=>{ STATE.items = s.val()||{}; renderAll(); });
-  onValue(ref(db,'customers'),s=>{ STATE.customers = s.val()||{}; renderAll(); });
-  onValue(ref(db,'invoices'),s=>{ STATE.invoices = s.val()||{}; renderAll(); });
-  onValue(ref(db,'settings'),s=>{ STATE.settings = s.val()||{name:'متجري',phone:'',addr:'',curr:'جنيه'}; applySettings(); });
-  onValue(ref(db,'cats'),s=>{ const v=s.val(); const stored=Array.isArray(v)?v:[]; const merged=DEFAULT_CATS.slice(); stored.forEach(c=>{ if(c && !merged.includes(c)) merged.push(c); }); STATE.cats = merged; renderCatChips(); renderCatList(); fillCatSelect(); renderInventory(); });
-  onValue(ref(db,'units'),s=>{ const v=s.val(); const stored=Array.isArray(v)?v:[]; const merged=DEFAULT_UNITS.slice(); stored.forEach(u=>{ if(u && !merged.includes(u)) merged.push(u); }); STATE.units = merged; renderUnitList(); fillUnitSelect(); });
+  onValue(ref(db,'items'),s=>{ const v=s.val()||{}; STATE.items=v; LS.set('items',v); renderAll(); });
+  onValue(ref(db,'customers'),s=>{ const v=s.val()||{}; STATE.customers=v; LS.set('customers',v); renderAll(); });
+  onValue(ref(db,'invoices'),s=>{ const v=s.val()||{}; STATE.invoices=v; LS.set('invoices',v); renderAll(); });
+  onValue(ref(db,'settings'),s=>{ const v=s.val()||STATE.settings; STATE.settings=v; LS.set('settings',v); applySettings(); });
+  onValue(ref(db,'cats'),s=>{ const v=s.val(); const stored=Array.isArray(v)?v:[]; const merged=DEFAULT_CATS.slice(); stored.forEach(c=>{ if(c && !merged.includes(c)) merged.push(c); }); STATE.cats=merged; LS.set('cats',merged); renderCatChips(); renderCatList(); fillCatSelect(); renderInventory(); });
+  onValue(ref(db,'units'),s=>{ const v=s.val(); const stored=Array.isArray(v)?v:[]; const merged=DEFAULT_UNITS.slice(); stored.forEach(u=>{ if(u && !merged.includes(u)) merged.push(u); }); STATE.units=merged; LS.set('units',merged); renderUnitList(); fillUnitSelect(); });
 })();
 
 function applySettings(){

@@ -24,13 +24,27 @@
     --input-bg:#0c1330; --hover-bg:rgba(255,255,255,.04);
   }
 
-  /* متغيرات الألوان للوضع النهاري */
+  /* متغيرات الألوان للوضع النهاري الشامل */
   body.light-mode {
-    --bg:#f3f4f6; --panel:#ffffff; --panel-2:#f9fafb; --card:#ffffff;
-    --text:#111827; --muted:#6b7280; --line:rgba(0,0,0,.1);
-    --primary:#3b82f6; --primary-2:#6366f1; --accent:#0ea5e9;
-    --input-bg:#f3f4f6; --hover-bg:rgba(0,0,0,.04);
+    --bg:#f3f4f6; --panel:#ffffff; --panel-2:#f8fafc; --card:#ffffff;
+    --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --primary:#3b82f6; --primary-2:#4f46e5; --accent:#0ea5e9;
+    --input-bg:#ffffff; --hover-bg:#f1f5f9;
   }
+  
+  /* تحسينات إضافية للوضع النهاري */
+  body.light-mode .kpi { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+  body.light-mode .modal .box { background: #ffffff; color: #0f172a; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+  body.light-mode .input, body.light-mode .select, body.light-mode .textarea { border-color: #cbd5e1; color: #0f172a; }
+  body.light-mode .input:focus, body.light-mode .select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+  body.light-mode thead th { background: #e2e8f0; color: #334155; }
+  body.light-mode .autocomplete-dropdown { background: #ffffff; border-color: #cbd5e1; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+  body.light-mode .autocomplete-item:hover { background: #f1f5f9; }
+  body.light-mode .nav button.active { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+  body.light-mode .btn.ghost { color: #334155; }
+  body.light-mode .btn { border-color: #cbd5e1; }
+  body.light-mode .profile-list-item { background: #f8fafc; border-color: #e2e8f0; }
+  body.light-mode .cat-chip { border-color: #cbd5e1; }
 
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Cairo',system-ui,sans-serif;-webkit-tap-highlight-color:transparent; transition: background 0.3s, color 0.3s;}
@@ -95,7 +109,6 @@
   .field{display:flex;flex-direction:column;gap:6px}
   .field label{font-size:12px;color:var(--muted);font-weight:700}
   .input,.select,.textarea{background:var(--input-bg);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:11px;font-size:14px;outline:none;transition:.2s;width:100%}
-  .input:focus,.select:focus,.textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(108,140,255,.15)}
 
   .tbl-wrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}
   table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:700px}
@@ -111,7 +124,8 @@
   .pill.paid{background:rgba(34,197,94,.15);color:var(--success)}
   .cat-chip{padding:8px 14px;border-radius:12px;background:var(--hover-bg);border:1px solid var(--line);color:var(--text);font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;transition:.2s}
   .cat-chip:hover{background:rgba(128,128,128,.15)}
-  .cat-chip.active{background:linear-gradient(135deg,rgba(108,140,255,.25),rgba(34,211,238,.2));border-color:rgba(108,140,255,.5);color:#fff;box-shadow:0 4px 16px rgba(108,140,255,.25)}
+  .cat-chip.active{background:linear-gradient(135deg,rgba(108,140,255,.25),rgba(34,211,238,.2));border-color:rgba(108,140,255,.5);color:var(--text);box-shadow:0 4px 16px rgba(108,140,255,.25)}
+  body.light-mode .cat-chip.active { color:#fff; }
   .cat-chip .cc{background:rgba(0,0,0,.3);padding:2px 8px;border-radius:999px;font-size:11px; color:#fff;}
   .tag{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(108,140,255,.15);border:1px solid rgba(108,140,255,.35);font-size:12px;font-weight:700; color:var(--text)}
   .tag b{cursor:pointer;color:var(--danger);font-weight:900;padding:0 4px}
@@ -123,164 +137,30 @@
   .modal h3{margin:0 0 14px}
 
   /* ============ تحديث تصميم الكاشير ============ */
-  .pos-container-new {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 20px;
-    align-items: start;
-  }
+  .pos-container-new { display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start; }
   
-  .invoice-summary-new {
-    background: var(--pos-green-grad);
-    border-radius: 24px;
-    padding: 20px;
-    color: #ffffff;
-    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.25);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    position: relative;
-    overflow: hidden;
-  }
-  .invoice-summary-new::before {
-    content: "";
-    position: absolute;
-    top: -20%;
-    left: -20%;
-    width: 150px;
-    height: 150px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    filter: blur(15px);
-  }
-  .invoice-summary-new h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    padding-bottom: 10px;
-  }
-  .invoice-summary-new .label-dark {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 700;
-  }
-  .invoice-summary-new .input-light {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #fff;
-    padding: 10px 12px;
-    border-radius: 12px;
-    outline: none;
-    font-size: 13px;
-    width: 100%;
-    transition: 0.2s;
-  }
+  .invoice-summary-new { background: var(--pos-green-grad); border-radius: 24px; padding: 20px; color: #ffffff; box-shadow: 0 12px 30px rgba(16, 185, 129, 0.25); display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden; }
+  .invoice-summary-new::before { content: ""; position: absolute; top: -20%; left: -20%; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(15px); }
+  .invoice-summary-new h3 { margin: 0; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); padding-bottom: 10px; }
+  .invoice-summary-new .label-dark { font-size: 13px; color: rgba(255, 255, 255, 0.9); font-weight: 700; }
+  .invoice-summary-new .input-light { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; padding: 10px 12px; border-radius: 12px; outline: none; font-size: 13px; width: 100%; transition: 0.2s; }
   .invoice-summary-new .input-light::placeholder { color: rgba(255,255,255,0.6); }
   .invoice-summary-new .input-light:focus { background: rgba(0, 0, 0, 0.3); border-color: #fff; }
   
-  .invoice-summary-new .metric-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    padding: 6px 0;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
-  }
-  .invoice-summary-new .metric-row.large {
-    border-bottom: none;
-    padding-top: 10px;
-    font-size: 20px;
-    font-weight: 900;
-  }
-  .invoice-summary-new .btn-checkout-new {
-    background: #ffffff;
-    color: #047857;
-    font-weight: 800;
-    font-size: 14px;
-    padding: 12px;
-    border-radius: 12px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: 0.2s;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    cursor: pointer;
-    border: none;
-  }
+  .invoice-summary-new .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 6px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.15); }
+  .invoice-summary-new .metric-row.large { border-bottom: none; padding-top: 10px; font-size: 20px; font-weight: 900; }
+  .invoice-summary-new .btn-checkout-new { background: #ffffff; color: #047857; font-weight: 800; font-size: 14px; padding: 12px; border-radius: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-shadow: 0 8px 20px rgba(0,0,0,0.15); cursor: pointer; border: none; }
   .invoice-summary-new .btn-checkout-new:hover { background: #f0fdf4; transform: translateY(-2px); }
 
-  .cashier-main-panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 24px;
-    min-height: 580px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-  }
-  .cashier-main-panel h2 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 900;
-  }
+  .cashier-main-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 24px; padding: 24px; min-height: 580px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+  .cashier-main-panel h2 { margin: 0; font-size: 22px; font-weight: 900; }
   .search-wrapper-new { position: relative; width: 100%; }
-  .search-input-new {
-    background: var(--input-bg);
-    border: 2px solid var(--line);
-    border-radius: 999px;
-    padding: 14px 24px 14px 50px;
-    color: var(--text);
-    font-size: 15px;
-    width: 100%;
-    outline: none;
-    transition: 0.25s;
-  }
+  .search-input-new { background: var(--input-bg); border: 2px solid var(--line); border-radius: 999px; padding: 14px 24px 14px 50px; color: var(--text); font-size: 15px; width: 100%; outline: none; transition: 0.25s; }
   .search-input-new:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15); }
-  .search-wrapper-new .search-icon {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 18px;
-    color: var(--muted);
-    pointer-events: none;
-  }
+  .search-wrapper-new .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--muted); pointer-events: none; }
 
-  .autocomplete-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    left: 0;
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    margin-top: 6px;
-    max-height: 250px;
-    overflow-y: auto;
-    z-index: 101;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    display: none;
-  }
-  body.light-mode .autocomplete-dropdown { box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-  
-  .autocomplete-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--line);
-    cursor: pointer;
-    transition: 0.15s;
-    color: var(--text);
-  }
+  .autocomplete-dropdown { position: absolute; top: 100%; right: 0; left: 0; background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; margin-top: 6px; max-height: 250px; overflow-y: auto; z-index: 101; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: none; }
+  .autocomplete-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); cursor: pointer; transition: 0.15s; color: var(--text); }
   .autocomplete-item:hover { background: var(--hover-bg); }
   .autocomplete-item .details { display: flex; align-items: center; gap: 12px; }
   .autocomplete-item .details img { width: 34px; height: 34px; border-radius: 8px; }
@@ -288,11 +168,7 @@
   .autocomplete-item .stock { font-size: 11px; color: var(--muted); }
   .autocomplete-item .price { font-weight: 800; color: var(--accent); font-size: 14px; }
 
-  #posCustDropdown {
-    background: #ffffff;
-    color: #111827;
-    border: none;
-  }
+  #posCustDropdown { background: #ffffff; color: #111827; border: none; }
   #posCustDropdown .autocomplete-item { border-bottom: 1px solid #f3f4f6; color: #111827; }
   #posCustDropdown .autocomplete-item:hover { background: #f9fafb; }
   #posCustDropdown .name { font-weight: 800; }
@@ -311,76 +187,48 @@
   .cart-table .item-info img { width: 32px; height: 32px; border-radius: 8px; }
   .cart-table .item-name { font-weight: 700; font-size: 13px; }
 
-  /* ============ تصميم الفاتورة ============ */
-  .invoice-wrapper {
-    background: #fff;
-    color: #000;
-    padding: 15px;
-    font-family: 'Arial', 'Cairo', sans-serif;
-  }
-  .invoice-header-flex {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-  }
+  /* ============ تصميم الفاتورة (للحفظ والطباعة) ============ */
+  .invoice-wrapper { background: #ffffff !important; color: #000000 !important; padding: 20px; font-family: 'Cairo', 'Arial', sans-serif; border-radius: 8px; position: relative; }
+  .invoice-header-flex { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
   .inv-customer-side { text-align: right; }
-  .inv-customer-side h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: bold; }
-  .inv-customer-side p { margin: 2px 0; font-size: 14px; }
+  .inv-customer-side h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: bold; color: #000 !important;}
+  .inv-customer-side p { margin: 2px 0; font-size: 15px; font-weight: 700; color: #000 !important; }
   
-  .inv-details-side { text-align: left; font-size: 13px; line-height: 1.5; }
+  .inv-details-side { text-align: left; font-size: 14px; line-height: 1.6; font-weight: 600; color: #000 !important; }
   
-  .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 14px;}
-  .inv-table th, .inv-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
-  .inv-table th { background: #f0f0f0; font-weight: bold; }
-  .inv-table td:nth-child(5) { text-align: right; } 
+  .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; color: #000 !important;}
+  .inv-table th, .inv-table td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; color: #000 !important;}
+  .inv-table th { background: #f8fafc !important; font-weight: bold; color: #0f172a !important; }
+  .inv-table td:nth-child(5) { text-align: right; font-weight: 700; } 
   
-  .inv-summary-box {
-    width: 220px;
-    border: 1px solid #000;
-    float: left;
-    margin-top: 5px;
-  }
-  .inv-summary-row {
-    display: flex;
-    border-bottom: 1px solid #000;
-  }
+  .inv-summary-box { width: 250px; border: 1px solid #cbd5e1; float: left; margin-top: 5px; border-radius: 6px; overflow: hidden; }
+  .inv-summary-row { display: flex; border-bottom: 1px solid #cbd5e1; background: #f8fafc !important; }
   .inv-summary-row:last-child { border-bottom: none; }
-  .inv-summary-row > div {
-    padding: 4px 6px;
-    font-size: 14px;
-    font-weight: bold;
-  }
-  .inv-summary-row > div:first-child { width: 100px; border-left: 1px solid #000; text-align: left;} 
+  .inv-summary-row > div { padding: 6px 10px; font-size: 15px; font-weight: 800; color: #000 !important;}
+  .inv-summary-row > div:first-child { width: 120px; border-left: 1px solid #cbd5e1; text-align: left; background: #ffffff !important;} 
   .inv-summary-row > div:last-child { flex: 1; text-align: right;} 
 
   .clearfix::after { content: ""; clear: both; display: table; }
 
-  .dual-qr-container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 30px;
-    padding-top: 15px;
-    border-top: 1px dashed #000;
-  }
+  .dual-qr-container { display: flex; justify-content: space-around; margin-top: 30px; padding-top: 20px; border-top: 2px dashed #cbd5e1; }
   .qr-box { text-align: center; }
-  .qr-box canvas { padding: 2px; }
-  .qr-box p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; }
+  .qr-box canvas { padding: 4px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff !important; }
+  .qr-box p { margin: 8px 0 0 0; font-size: 13px; font-weight: 900; color: #475569 !important; }
   
-  .programmer-footer {
-    text-align:center;
-    margin-top:15px;
-    border-top:1px dashed #000;
-    padding-top:8px;
-    font-size:13px;
-    font-weight:bold;
-  }
+  .programmer-footer { text-align: center; margin-top: 25px; border-top: 2px dashed #cbd5e1; padding-top: 20px; font-family: 'Cairo', sans-serif; background: #f8fafc !important; border-radius: 0 0 12px 12px; }
+  .pf-title { font-size: 15px; font-weight: 900; color: #1e40af !important; margin-bottom: 6px; }
+  .pf-subtitle { font-size: 14px; font-weight: 800; color: #047857 !important; margin-bottom: 10px; }
+  .pf-phone { font-size: 16px; font-weight: 900; color: #e11d48 !important; display: inline-flex; align-items: center; gap: 6px; background: #fff1f2 !important; padding: 6px 16px; border-radius: 999px; border: 1px solid #fecdd3; }
 
+  /* منطقة الطباعة */
+  #print-area { position: absolute; top: -9999px; left: -9999px; visibility: hidden; width: 100%; }
   @media print{
-    body *{visibility:hidden!important}
-    #print-area, #print-area *{visibility:visible!important; color: #000 !important; background: #fff !important;}
-    #print-area{position:absolute;inset:0;background:white;color:black;padding:0; width: 100%;}
-    .app,.modal{display:none!important}
+    body * { visibility: hidden !important; }
+    #print-area, #print-area * { visibility: visible !important; color: #000 !important; background: #fff !important; }
+    #print-area { position: absolute; left: 0; top: 0; padding: 0; width: 100%; }
+    .app, .modal { display: none !important; }
     .inv-table th { background: transparent !important; }
+    .programmer-footer { background: transparent !important; }
   }
 
   .menu-btn{display:none;background:var(--hover-bg);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:10px;font-weight:800}
@@ -401,8 +249,8 @@
   .footer-credit{text-align:center;padding:20px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);margin-top:20px}
   .footer-credit b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:900}
   
-  /* تنسيقات بروفايل العميل */
-  .profile-list-item { background:var(--hover-bg); padding:10px; border-radius:10px; border:1px solid var(--line); margin-bottom:8px;}
+  .profile-list-item { background:var(--hover-bg); padding:10px; border-radius:10px; border:1px solid var(--line); margin-bottom:8px; transition: 0.2s;}
+  .profile-list-item:hover { background: rgba(128,128,128,0.1); transform: translateX(-4px); }
   .profile-list-item div { display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;}
 </style>
 </head>
@@ -428,8 +276,9 @@
       <button data-tab="reports"><span class="ic">📈</span> التقارير</button>
       <button data-tab="settings"><span class="ic">⚙️</span> الإعدادات</button>
     </nav>
-    <div style="margin-top:20px;padding:12px;background:var(--hover-bg);border:1px solid var(--line);border-radius:12px;font-size:11px;color:var(--muted);line-height:1.7">
-      تطوير وبرمجة<br><b style="color:inherit;font-size:13px">توماس شنودة فرح</b><br>(توماس كود)
+    <div style="margin-top:20px;padding:12px;background:var(--hover-bg);border:1px solid var(--line);border-radius:12px;font-size:11px;color:var(--muted);line-height:1.7;text-align:center;">
+      <div style="font-weight:bold; color:var(--text); margin-bottom:4px;">تطوير وبرمجة</div>
+      <b style="color:var(--primary);font-size:14px">توماس شنودة فرح</b><br>(توماس كود)
     </div>
   </aside>
 
@@ -736,11 +585,11 @@
     </div>
     <div class="grid" style="grid-template-columns:1fr 1fr; gap:20px; max-height:50vh; overflow-y:auto;">
       <div>
-        <h4 style="margin-top:0; color:var(--accent)">🧾 سجل الفواتير</h4>
+        <h4 style="margin-top:0; color:var(--accent)">🧾 سجل الفواتير <span style="font-size:11px;color:var(--muted)">(اضغط للعرض)</span></h4>
         <div id="profInvoicesList" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
       <div>
-        <h4 style="margin-top:0; color:var(--success)">💵 سجل السدادات والدفع</h4>
+        <h4 style="margin-top:0; color:var(--success)">💵 سجل السدادات والدفع <span style="font-size:11px;color:var(--muted)">(اضغط للعرض)</span></h4>
         <div id="profPaymentsList" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
     </div>
@@ -764,21 +613,21 @@
   </div>
 </div>
 
-<!-- INVOICE VIEW MODAL -->
+<!-- INVOICE & RECEIPT VIEW MODAL -->
 <div class="modal" id="invModal">
-  <div class="box lg" style="background: #fff; max-width: 800px; padding:20px;">
+  <div class="box lg" style="background: #fff; max-width: 800px; padding:0;">
     <div id="invView"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px; border-top:1px solid #ccc; padding-top:15px; flex-wrap:wrap;">
-      <button class="btn success" onclick="sendInvoiceWhatsApp()" style="margin-inline-end:auto;">💬 إرسال واتساب</button>
-      <button class="btn primary" onclick="saveInvoiceImage()" style="background:#3b82f6;">📸 حفظ الفاتورة كصورة</button>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:0px; border-top:1px solid #ccc; padding:15px; flex-wrap:wrap; background: #f8fafc; border-radius: 0 0 20px 20px;">
+      <button class="btn success" onclick="sendInvoiceWhatsApp(this)" style="margin-inline-end:auto; font-weight:900;">💬 إرسال كصورة واتساب</button>
+      <button class="btn primary" onclick="saveInvoiceImage()" style="background:#3b82f6; font-weight:900;">📸 تحميل الصورة</button>
       <button class="btn" onclick="closeModal('invModal')" style="color:#000; border:1px solid #000; background:transparent;">إغلاق</button>
-      <button class="btn primary" onclick="printInvoice()" style="background: #000; color: #fff; border:none;">🖨️ طباعة الفاتورة</button>
+      <button class="btn primary" onclick="printInvoice()" style="background: #0f172a; color: #fff; border:none; font-weight:900;">🖨️ طباعة</button>
     </div>
   </div>
 </div>
 
 <!-- PRINT AREA -->
-<div id="print-area" style="display:none"></div>
+<div id="print-area"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -820,6 +669,8 @@ if(localStorage.getItem('theme') === 'light') { document.body.classList.add('lig
 
 // ============ STATE ============
 const STATE = { items:{}, customers:{}, invoices:{}, settings:{}, cats:[], units:[], activeCat:'الكل', cart:[], editingItemId:null, editingCustId:null, payCustId:null, viewingCustId:null, viewingInvoiceId:null };
+let currentSharePhone = ''; 
+
 const DEFAULT_CATS = ['سوائل','بودرة','فوارغ','تحصين','علافات','سقيات'];
 const DEFAULT_UNITS = ['مل','لتر','سم³','نقطة','جرعة','جرام','كيلوجرام','قرص','أمبول','فيال','زجاجة','كيس','شيكارة','قطعة'];
 const ICON_LIB = ['💊','💉','🧪','🧴','🩺','🌡️','🧬','🦠','🐄','🐑','🐔','🐖','🐶','🐱','🐎','💧','🌾','🧂','🍾','📦'];
@@ -831,6 +682,7 @@ const fmt = n => (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,
 const today = () => new Date().toISOString().slice(0,10);
 const toast = m => { const t=$('#toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200) };
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const getBaseUrl = () => window.location.origin + window.location.pathname;
 
 // ============ TABS ============
 $$('.nav button').forEach(b=>b.onclick=()=>{
@@ -846,7 +698,7 @@ $$('.nav button').forEach(b=>b.onclick=()=>{
   if(t==='dashboard') renderDashboard(); 
 });
 
-// ============ FIREBASE LOAD ============
+// ============ FIREBASE LOAD & ROUTING ============
 function waitFB(){ return new Promise(r=>{ const i=setInterval(()=>{ if(window._db){clearInterval(i);r(window._db)} },50) }) }
 const LS = { get(k, fb){ try{ const v=localStorage.getItem('vp_'+k); return v?JSON.parse(v):fb; }catch{ return fb; } }, set(k, v){ try{ localStorage.setItem('vp_'+k, JSON.stringify(v)); }catch{} } };
 
@@ -877,7 +729,22 @@ document.addEventListener('DOMContentLoaded',()=>{
   onValue(ref(db,'customers'),s=>{ const v=s.val()||{}; STATE.customers=v; LS.set('customers',v); renderAll(); });
   onValue(ref(db,'invoices'),s=>{ const v=s.val()||{}; STATE.invoices=v; LS.set('invoices',v); renderAll(); });
   onValue(ref(db,'settings'),s=>{ const v=s.val()||STATE.settings; STATE.settings=v; applySettings(); });
+  
+  // التحقق من الرابط القادم من الكيو آر كود
+  setTimeout(checkUrlRouting, 800);
 })();
+
+function checkUrlRouting() {
+  const params = new URLSearchParams(window.location.search);
+  if(params.has('inv')) {
+    const invId = params.get('inv');
+    if(STATE.invoices[invId]) viewInvoice(invId);
+  }
+  if(params.has('cust')) {
+    const custId = params.get('cust');
+    if(STATE.customers[custId]) viewCustomerProfile(custId);
+  }
+}
 
 function applySettings(){ $('#setName').value=STATE.settings.name||''; $('#setPhone').value=STATE.settings.phone||''; $('#setAddr').value=STATE.settings.addr||''; $('#setCurr').value=STATE.settings.curr||'جنيه'; }
 async function saveSettings(){ const {db,ref,set} = await waitFB(); await set(ref(db,'settings'), {name:$('#setName').value, phone:$('#setPhone').value, addr:$('#setAddr').value, curr:$('#setCurr').value}); toast('تم حفظ الإعدادات'); }
@@ -897,7 +764,6 @@ function renderDashboard(){
   $('#kpiToday').textContent = fmt(invs.filter(i=>(i.date||'').slice(0,10)===today()).reduce((s,i)=>s+(+i.total||0),0));
   $('#kpiCust').textContent = custs.length;
   
-  // تصحيح إجمالي المديونيات
   const totalDebtAmount = Object.keys(STATE.customers).reduce((sum, id) => sum + custStats(id).debt, 0);
   $('#kpiDebt').textContent = fmt(totalDebtAmount);
 
@@ -945,13 +811,12 @@ function custStats(id){
   const invs = Object.values(STATE.invoices).filter(i=>i.customerId===id); 
   const totalSell = invs.reduce((s,i)=>s+(+i.total||0),0); 
   
-  // حساب مجموع عمليات السداد الإضافية من الـ History
   const c = STATE.customers[id];
   let paymentsTotal = 0;
   if(c && c.payments) {
     paymentsTotal = Object.values(c.payments).reduce((sum, p) => sum + (+p.amt||0), 0);
   } else if(c && c.extraPaid) {
-    paymentsTotal = +c.extraPaid; // للرجوع للأكواد القديمة
+    paymentsTotal = +c.extraPaid; 
   }
 
   const totalPaid = invs.reduce((s,i)=>s+(+i.paid||0),0) + paymentsTotal; 
@@ -986,7 +851,6 @@ function editCust(id){ STATE.editingCustId=id; const c=STATE.customers[id]; $('#
 async function saveCust(){ const {db,ref,set} = await waitFB(); const data = { name:$('#cName').value.trim(), phone:$('#cPhone').value.trim(), addr:$('#cAddr').value.trim(), note:$('#cNote').value.trim() }; if(!data.name) return toast('أدخل الاسم'); const id = STATE.editingCustId || uid(); const old = STATE.customers[id]||{}; await set(ref(db,'customers/'+id), {...old,...data}); closeModal('custModal'); toast('تم الحفظ'); renderDashboard(); }
 async function delCust(id){ if(!confirm('حذف العميل؟')) return; const {db,ref,remove} = await waitFB(); await remove(ref(db,'customers/'+id)); toast('تم الحذف'); renderDashboard(); }
 
-// عرض بروفايل العميل الشامل
 function viewCustomerProfile(id) {
   STATE.viewingCustId = id;
   const c = STATE.customers[id];
@@ -996,22 +860,22 @@ function viewCustomerProfile(id) {
   $('#profPhone').textContent = c.phone || 'غير مسجل';
   $('#profDebt').textContent = fmt(st.debt);
   
-  // عرض الفواتير
+  // الفواتير أصبحت قابلة للضغط
   const invsHtml = st.invoices.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(inv => {
     const dStr = new Date(inv.date).toLocaleDateString('en-CA');
-    return `<div class="profile-list-item">
+    return `<div class="profile-list-item" style="cursor:pointer" onclick="viewInvoice('${inv._id}')">
       <div><b>فاتورة ${inv.no}</b> <span>${dStr}</span></div>
       <div><span>إجمالي: ${fmt(inv.total)}</span> <span>مدفوع: ${fmt(inv.paid)}</span></div>
     </div>`;
   }).join('');
   $('#profInvoicesList').innerHTML = invsHtml || '<div class="empty" style="padding:10px;">لا توجد فواتير</div>';
   
-  // عرض المدفوعات من السجل
+  // السدادات أصبحت قابلة للضغط
   let paysHtml = '';
   if (c.payments) {
-    paysHtml = Object.values(c.payments).sort((a,b)=>new Date(b.date)-new Date(a.date)).map(p => {
+    paysHtml = Object.entries(c.payments).sort((a,b)=>new Date(b[1].date)-new Date(a[1].date)).map(([pId, p]) => {
       const dStr = new Date(p.date).toLocaleString('en-CA');
-      return `<div class="profile-list-item" style="border-right: 4px solid var(--success);">
+      return `<div class="profile-list-item" style="border-right: 4px solid var(--success); cursor:pointer" onclick="viewPastReceipt('${id}', '${pId}')">
         <div><b style="color:var(--success)">${fmt(p.amt)} ج.م</b> <span>${dStr}</span></div>
       </div>`;
     }).join('');
@@ -1023,13 +887,23 @@ function viewCustomerProfile(id) {
   $('#custProfileModal').classList.add('show');
 }
 
+// عرض إيصال سداد سابق
+function viewPastReceipt(custId, payId) {
+  const c = STATE.customers[custId];
+  if(!c || !c.payments || !c.payments[payId]) return;
+  const p = c.payments[payId];
+  // نعرض الرصيد الحالي للعميل في الإيصال كمعلومة عامة
+  const currentBalance = custStats(custId).debt;
+  showReceipt(c.name, p.amt, currentBalance, custId, p.date);
+}
+
 function openPay(id){ 
   STATE.payCustId=id; const c=STATE.customers[id]; const st=custStats(id); 
   $('#payCustName').textContent=c.name; $('#payCurDebt').textContent=fmt(st.debt)+' جنيه'; $('#payAmt').value=st.debt; 
   $('#payModal').classList.add('show'); 
 }
 
-// حفظ سجل السداد في Firebase
+// السداد وإصدار الإيصال تلقائياً
 async function confirmPay(){ 
   const {db,ref,update} = await waitFB(); 
   const amt = +$('#payAmt').value||0; 
@@ -1038,22 +912,31 @@ async function confirmPay(){
   const id = STATE.payCustId; 
   const c = STATE.customers[id]||{}; 
   const payId = uid();
+  const dateStr = new Date().toISOString();
   const updates = {}; 
   
-  // حفظ القيمة الإجمالية للرجوع
   updates['customers/'+id+'/extraPaid'] = (+c.extraPaid||0)+amt; 
-  // إضافة السداد لسجل الدفعات
-  updates['customers/'+id+'/payments/'+payId] = { amt: amt, date: new Date().toISOString() };
+  updates['customers/'+id+'/payments/'+payId] = { amt: amt, date: dateStr };
   
   await update(ref(db), updates); 
+  
+  // تحديث محلي فوري لإظهار الرصيد الصحيح في الإيصال
+  if(!STATE.customers[id].payments) STATE.customers[id].payments = {};
+  STATE.customers[id].extraPaid = (+c.extraPaid||0)+amt;
+  STATE.customers[id].payments[payId] = { amt: amt, date: dateStr };
+  
+  const updatedDebt = custStats(id).debt;
+
   closeModal('payModal'); 
   toast('تم السداد بنجاح ✓'); 
   renderDashboard(); 
   
-  // تحديث البروفايل فوراً إذا كان مفتوحاً
   if($('#custProfileModal').classList.contains('show')) {
     viewCustomerProfile(id);
   }
+
+  // إظهار إيصال السداد مباشرة
+  showReceipt(c.name, amt, updatedDebt, id, dateStr);
 }
 
 // ============ POS (SMART SYSTEM) ============
@@ -1127,7 +1010,7 @@ function renderCart(){
     contentArea.innerHTML = `<div class="empty-cart-state"><div class="cart-big-icon">🛒</div><h4>السلة فارغة</h4><p>ابدأ بالبحث عن المنتج أعلاه</p></div>`;
   } else {
     contentArea.innerHTML = `<div class="cart-table-container"><table class="cart-table"><thead><tr><th>الصنف</th><th style="text-align: center;">الكمية</th><th style="text-align: right;">السعر</th><th style="text-align: right;">الإجمالي</th><th style="text-align: center;">إجراء</th></tr></thead><tbody>
-      ${STATE.cart.map(c => `<tr><td><div class="item-info"><img src="${iconImg(c.icon)}"/><div class="item-name">${c.name}</div></div></td><td style="text-align: center;"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button onclick="changeQty('${c.id}',-1)" style="width:24px;height:24px;border-radius:6px;background:var(--hover-bg);color:var(--text);font-weight:bold;">−</button><span style="font-weight:bold;min-width:20px;">${c.qty}</span><button onclick="changeQty('${c.id}',1)" style="width:24px;height:24px;border-radius:6px;background:var(--hover-bg);color:var(--text);font-weight:bold;">+</button></div></td><td style="text-align: right; font-weight: 700;">${fmt(c.sell)}</td><td style="text-align: right; font-weight: 800; color: var(--accent);">${fmt(c.sell * c.qty)}</td><td style="text-align: center;"><button class="btn sm danger" onclick="deleteFromCart('${c.id}')" style="padding: 4px 8px;">🗑</button></td></tr>`).join('')}
+      ${STATE.cart.map(c => `<tr><td><div class="item-info"><img src="${iconImg(c.icon)}"/><div class="item-name" style="color:var(--text)">${c.name}</div></div></td><td style="text-align: center;"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button onclick="changeQty('${c.id}',-1)" style="width:24px;height:24px;border-radius:6px;background:var(--hover-bg);color:var(--text);font-weight:bold;">−</button><span style="font-weight:bold;min-width:20px;">${c.qty}</span><button onclick="changeQty('${c.id}',1)" style="width:24px;height:24px;border-radius:6px;background:var(--hover-bg);color:var(--text);font-weight:bold;">+</button></div></td><td style="text-align: right; font-weight: 700;">${fmt(c.sell)}</td><td style="text-align: right; font-weight: 800; color: var(--accent);">${fmt(c.sell * c.qty)}</td><td style="text-align: center;"><button class="btn sm danger" onclick="deleteFromCart('${c.id}')" style="padding: 4px 8px;">🗑</button></td></tr>`).join('')}
     </tbody></table></div>`;
   }
   
@@ -1209,35 +1092,41 @@ function viewInvoice(id){
   showInvoice({...inv, _id:id}, prevDebt, inv.customerId); 
 }
 
+const programmerFooterHTML = `
+  <div class="programmer-footer">
+    <div class="pf-title">💻 برمجة وتطوير: توماس شنودة فرح (توماس كود)</div>
+    <div class="pf-subtitle">✨ يسعدني تواصلكم معي لتنفيذ مشاريعكم البرمجية باحترافية ✨</div>
+    <div class="pf-phone">📞 01288769853</div>
+  </div>
+`;
+
 function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, isPrint) {
   const prefix = isPrint ? 'printQR' : 'modalQR';
   return `
-    <div class="invoice-wrapper" style="background:#fff;">
+    <div class="invoice-wrapper" style="background:#ffffff; color:#000;">
       <div class="invoice-header-flex">
         <div class="inv-customer-side">
-          <h3>العميل</h3>
-          <p style="font-weight:bold;">${inv.customerName}</p>
-          <p>${s.name || 'الصيدلية البيطرية'}</p>
+          <h3 style="color:#000;">العميل</h3>
+          <p style="font-weight:bold; color:#000;">${inv.customerName}</p>
+          <p style="color:#64748b; font-size: 13px;">${s.name || 'الصيدلية البيطرية'}</p>
         </div>
-        <div class="inv-details-side">
-          <div>رقم الفاتورة: <b>${inv.no}</b></div>
+        <div class="inv-details-side" style="color:#000;">
+          <div>رقم الفاتورة: <b style="color:#2563eb">${inv.no}</b></div>
           <div>نوع الفاتورة: ${currentRem > 0 ? 'آجل' : 'نقدي'}</div>
           <div>التاريخ: ${dateStr}</div>
           <div>الوقت: ${timeStr}</div>
         </div>
       </div>
       
-      <div style="text-align: right; margin-bottom:5px; font-weight:bold;">ملاحظات</div>
-      
       <table class="inv-table">
         <thead>
           <tr>
-            <th style="width: 80px;">الإجمالي</th>
-            <th style="width: 70px;">السعر</th>
-            <th style="width: 50px;">الكمية</th>
-            <th style="width: 60px;">الوحدة</th>
-            <th style="text-align: right;">اسم الصنف</th>
-            <th style="width: 30px;">م</th>
+            <th style="width: 80px; background:#f8fafc; color:#000;">الإجمالي</th>
+            <th style="width: 70px; background:#f8fafc; color:#000;">السعر</th>
+            <th style="width: 50px; background:#f8fafc; color:#000;">الكمية</th>
+            <th style="width: 60px; background:#f8fafc; color:#000;">الوحدة</th>
+            <th style="text-align: right; background:#f8fafc; color:#000;">اسم الصنف</th>
+            <th style="width: 30px; background:#f8fafc; color:#000;">م</th>
           </tr>
         </thead>
         <tbody>
@@ -1247,34 +1136,33 @@ function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeSt
 
       <div class="clearfix">
         <div class="inv-summary-box">
-          <div class="inv-summary-row"><div>${fmt(inv.total)}</div><div>الإجمالي</div></div>
-          <div class="inv-summary-row"><div>${fmt(inv.paid)}</div><div>المدفوع</div></div>
-          <div class="inv-summary-row"><div>${fmt(currentBalance - currentRem)}</div><div>الرصيد السابق</div></div>
-          <div class="inv-summary-row"><div>${fmt(currentBalance)}</div><div>الرصيد الحالي</div></div>
+          <div class="inv-summary-row"><div style="color:#2563eb; font-weight:900;">${fmt(inv.total)}</div><div style="color:#000;">الإجمالي</div></div>
+          <div class="inv-summary-row"><div style="color:#16a34a; font-weight:900;">${fmt(inv.paid)}</div><div style="color:#000;">المدفوع</div></div>
+          <div class="inv-summary-row"><div style="color:#000; font-weight:900;">${fmt(currentBalance - currentRem)}</div><div style="color:#000;">الرصيد السابق</div></div>
+          <div class="inv-summary-row"><div style="color:#dc2626; font-weight:900;">${fmt(currentBalance)}</div><div style="color:#000;">الرصيد الحالي</div></div>
         </div>
       </div>
 
-      <!-- نظام الـ 2 كيو آر كود -->
       <div class="dual-qr-container">
         <div class="qr-box">
           <canvas id="${prefix}1"></canvas>
-          <p>الفاتورة</p>
+          <p style="color:#000;">تفاصيل الفاتورة</p>
         </div>
         <div class="qr-box">
           <canvas id="${prefix}2"></canvas>
-          <p>حساب الشخص كامل</p>
+          <p style="color:#000;">كشف الحساب</p>
         </div>
       </div>
       
-      <div class="programmer-footer">
-        برمجة وتطوير توماس شنودة فرح (توماس كود) للتواصل 01288769853
-      </div>
+      ${programmerFooterHTML}
     </div>
   `;
 }
 
 function showInvoice(inv, prevDebt = 0, custId = ''){
   STATE.viewingInvoiceId = inv._id;
+  currentSharePhone = STATE.customers[custId]?.phone || '';
+  
   const s = STATE.settings;
   const currentRem = Math.max(0, (+inv.total||0) - (+inv.paid||0));
   const currentBalance = prevDebt + currentRem; 
@@ -1285,12 +1173,12 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
 
   let itemsHtml = (inv.items||[]).map((it, i) => `
     <tr>
-      <td style="font-weight:bold;">${fmt(it.sell * it.qty)}</td>
-      <td>${fmt(it.sell)}</td>
-      <td>${it.qty}</td>
-      <td style="color:#555;">${it.unit || ''}</td>
-      <td style="text-align:right;">${it.name}</td>
-      <td>${i + 1}</td>
+      <td style="font-weight:900; color:#000;">${fmt(it.sell * it.qty)}</td>
+      <td style="color:#000;">${fmt(it.sell)}</td>
+      <td style="font-weight:bold; color:#000;">${it.qty}</td>
+      <td style="color:#64748b; font-size:12px;">${it.unit || ''}</td>
+      <td style="text-align:right; color:#000;">${it.name}</td>
+      <td style="color:#000;">${i + 1}</td>
     </tr>
   `).join('');
 
@@ -1298,61 +1186,164 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
   $('#print-area').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, true);
   $('#invModal').classList.add('show');
 
-  // توليد الباركود بشكل آمن بعد رسم النافذة
+  // توليد الباركود بروابط حقيقية للموقع
   setTimeout(() => {
     try {
-      const qr1Text = `فاتورة: ${inv.no}\nالعميل: ${inv.customerName}\nالإجمالي: ${inv.total}\nالمدفوع: ${inv.paid}\nالتاريخ: ${dateStr}`;
-      
-      let qr2Text = "عميل نقدي بدون حساب دائم";
-      if(custId) {
-        qr2Text = `كشف حساب\nالعميل: ${inv.customerName}\nصافي المديونية: ${fmt(currentBalance)} ج.م`;
-      }
+      const qr1Url = getBaseUrl() + "?inv=" + inv._id;
+      let qr2Url = "عميل نقدي";
+      if(custId) qr2Url = getBaseUrl() + "?cust=" + custId;
 
-      const q1 = document.getElementById('modalQR1');
-      const q2 = document.getElementById('modalQR2');
-      const q3 = document.getElementById('printQR1');
-      const q4 = document.getElementById('printQR2');
+      const q1 = document.getElementById('modalQR1'); const q2 = document.getElementById('modalQR2');
+      const q3 = document.getElementById('printQR1'); const q4 = document.getElementById('printQR2');
 
-      if(q1) new QRious({ element: q1, value: qr1Text, size: 120 });
-      if(q2) new QRious({ element: q2, value: qr2Text, size: 120 });
-      if(q3) new QRious({ element: q3, value: qr1Text, size: 120 });
-      if(q4) new QRious({ element: q4, value: qr2Text, size: 120 });
-      
+      if(q1) new QRious({ element: q1, value: String(qr1Url), size: 140 });
+      if(q2) new QRious({ element: q2, value: String(qr2Url), size: 140 });
+      if(q3) new QRious({ element: q3, value: String(qr1Url), size: 140 });
+      if(q4) new QRious({ element: q4, value: String(qr2Url), size: 140 });
     } catch (e) { console.error("QR Code Error:", e); }
-  }, 150);
+  }, 100);
 }
 
-// واتساب
-function sendInvoiceWhatsApp() {
-  const inv = STATE.invoices[STATE.viewingInvoiceId];
-  if(!inv) return;
-  const c = STATE.customers[inv.customerId];
-  let phone = c ? c.phone : '';
+function generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, isPrint) {
+  const prefix = isPrint ? 'printQR' : 'modalQR';
+  return `
+    <div class="invoice-wrapper" style="background:#ffffff; color:#000;">
+      <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #cbd5e1; padding-bottom: 15px;">
+        <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a;">سند قبض / إيصال سداد</h2>
+        <p style="margin: 5px 0 0; font-size: 15px; color:#475569;">${STATE.settings.name || 'الصيدلية البيطرية'}</p>
+      </div>
+      
+      <div class="invoice-header-flex">
+        <div class="inv-customer-side" style="text-align: right;">
+          <h3 style="color: #64748b; font-size: 14px;">استلمنا من السيد/ة:</h3>
+          <p style="font-weight:900; font-size: 20px; color:#1e40af;">${cName}</p>
+        </div>
+        <div class="inv-details-side" style="color:#000;">
+          <div>التاريخ: ${dateStr}</div>
+          <div>الوقت: ${timeStr}</div>
+        </div>
+      </div>
+      
+      <div style="margin: 25px 0; padding: 20px; border: 2px dashed #22c55e; background: #f0fdf4; text-align: center; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.1);">
+        <div style="font-size: 15px; color: #166534; font-weight: bold; margin-bottom: 5px;">مبلغاً وقدره</div>
+        <div style="font-size: 32px; font-weight: 900; color: #15803d;">${fmt(amt)} ج.م</div>
+      </div>
+
+      <div class="clearfix">
+        <div class="inv-summary-box" style="float: right; width: 100%;">
+          <div class="inv-summary-row"><div style="width: 170px; color:#000; font-weight:900;">${fmt(currentBalance + amt)}</div><div style="color:#000;">المديونية السابقة (قبل السداد)</div></div>
+          <div class="inv-summary-row"><div style="width: 170px; color: #16a34a; font-weight:900;">${fmt(amt)}</div><div style="color:#000;">الدفعة المسددة حالياً</div></div>
+          <div class="inv-summary-row"><div style="width: 170px; color: #dc2626; font-weight:900;">${fmt(currentBalance)}</div><div style="color:#000;">المديونية المتبقية (الآن)</div></div>
+        </div>
+      </div>
+
+      <div class="dual-qr-container">
+        <div class="qr-box">
+          <canvas id="${prefix}1"></canvas>
+          <p style="color:#000;">توثيق الدفعة</p>
+        </div>
+        <div class="qr-box">
+          <canvas id="${prefix}2"></canvas>
+          <p style="color:#000;">كشف الحساب</p>
+        </div>
+      </div>
+      
+      ${programmerFooterHTML}
+    </div>
+  `;
+}
+
+function showReceipt(cName, amt, currentBalance, custId, customDateIso = null) {
+  STATE.viewingInvoiceId = null; 
+  currentSharePhone = STATE.customers[custId]?.phone || '';
   
+  const dateObj = customDateIso ? new Date(customDateIso) : new Date();
+  const dateStr = dateObj.toLocaleDateString('en-CA').replace(/-/g, '/');
+  const timeStr = dateObj.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
+
+  $('#invView').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, false);
+  $('#print-area').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, true);
+  $('#invModal').classList.add('show');
+
+  setTimeout(() => {
+    try {
+      const qr1Url = getBaseUrl() + "?cust=" + custId; // نفتح بروفايل العميل للتأكيد
+      const qr2Url = getBaseUrl() + "?cust=" + custId; // كشف الحساب هو البروفايل
+
+      const q1 = document.getElementById('modalQR1'); const q2 = document.getElementById('modalQR2');
+      const q3 = document.getElementById('printQR1'); const q4 = document.getElementById('printQR2');
+      
+      if(q1) new QRious({ element: q1, value: String(qr1Url), size: 140 });
+      if(q2) new QRious({ element: q2, value: String(qr2Url), size: 140 });
+      if(q3) new QRious({ element: q3, value: String(qr1Url), size: 140 });
+      if(q4) new QRious({ element: q4, value: String(qr2Url), size: 140 });
+    } catch (e) { console.error("QR Code Error:", e); }
+  }, 100);
+}
+
+// واتساب المطور (مشاركة كصورة بشكل احترافي)
+async function sendInvoiceWhatsApp(btn) {
+  const invoiceElement = document.querySelector('#invView .invoice-wrapper');
+  if(!invoiceElement) return;
+  
+  let phone = currentSharePhone;
   if(!phone || phone.trim() === '') {
     phone = prompt('أدخل رقم واتساب للعميل (مع كود الدولة، مثال 201xxxxxxxxx):', '201');
     if(!phone) return;
   } else {
-    // تنسيق الرقم للمصريين
-    if(phone.startsWith('01')) phone = '2' + phone;
+    if(phone.startsWith('01')) phone = '2' + phone; 
   }
 
-  const dateStr = new Date(inv.date).toLocaleDateString('en-CA');
-  const msg = `مرحباً ${inv.customerName}،\n\nنرفق لكم تفاصيل الفاتورة رقم: ${inv.no}\nإجمالي الفاتورة: ${fmt(inv.total)} ج.م\nالمدفوع: ${fmt(inv.paid)} ج.م\nالتاريخ: ${dateStr}\n\nشكراً لتعاملك مع صيدليتنا البيطرية.`;
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ جاري التجهيز...';
+  btn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(invoiceElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'receipt.png', { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'مرفق المستند',
+            text: 'مرفق صورة الفاتورة/الإيصال'
+          });
+        } catch (err) { console.log('تم إلغاء المشاركة', err); }
+      } else {
+        try {
+          const item = new ClipboardItem({ 'image/png': blob });
+          await navigator.clipboard.write([item]);
+          alert('تم نسخ صورة الفاتورة بنجاح! 📋\n\nسيتم فتح محادثة الواتساب الآن.. قم بعمل (لصق / Paste) داخل المحادثة لإرسال الصورة للعميل مباشرة.');
+          window.open(`https://wa.me/${phone}`, '_blank');
+        } catch (err) {
+          alert('متصفحك لا يدعم نسخ الصور تلقائياً. تم تحميل الصورة على جهازك، يمكنك إرسالها للعميل يدوياً.');
+          saveInvoiceImage();
+        }
+      }
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }, 'image/png');
+  } catch(e) {
+    console.error(e);
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    alert('حدث خطأ أثناء تجهيز الصورة');
+  }
 }
 
-// حفظ الفاتورة كصورة
+// حفظ الفاتورة كصورة بشكل دقيق مع دعم الألوان الصريحة
 function saveInvoiceImage() {
   const invoiceElement = document.querySelector('#invView .invoice-wrapper');
   if(!invoiceElement) return;
   
-  html2canvas(invoiceElement, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+  html2canvas(invoiceElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
     const link = document.createElement('a');
-    link.download = `Invoice-${STATE.viewingInvoiceId}.png`;
+    link.download = `Invoice-${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-    toast('تم تحميل الفاتورة كصورة');
+    toast('تم حفظ الفاتورة كصورة بنجاح');
   });
 }
 
@@ -1390,4 +1381,4 @@ async function importExcel(e){
 function closeModal(id){ $('#'+id).classList.remove('show'); }
 </script>
 </body>
-</html>
+  </html>

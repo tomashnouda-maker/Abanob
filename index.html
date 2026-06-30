@@ -15,7 +15,7 @@
 
 <style>
   /* متغيرات الألوان للوضع الليلي (الافتراضي) */
-  :root{
+  :root {
     --bg:#0b1020; --panel:#121833; --panel-2:#1a2147; --card:#161d3e;
     --text:#e9ecff; --muted:#9aa3c7; --line:rgba(255,255,255,.08);
     --primary:#6c8cff; --primary-2:#8a6cff; --accent:#22d3ee;
@@ -373,7 +373,7 @@
         <div class="panel">
           <h3>🕑 آخر الفواتير</h3>
           <div class="tbl-wrap"><table>
-            <thead><tr><th>#</th><th>العميل</th><th>الإجمالي</th><th>المدفوع</th><th>الباقي</th><th>التاريخ</th></tr></thead>
+            <thead><tr><th>#</th><th>العميل</th><th>إجمالي</th><th>المدفوع</th><th>الباقي</th><th>التاريخ</th></tr></thead>
             <tbody id="recentInvBody"></tbody>
           </table></div>
         </div>
@@ -1193,8 +1193,10 @@ const programmerFooterHTML = `
   </div>
 `;
 
-function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, isPrint) {
+// دالة توليد الفاتورة المعدلة لتدعم إخفاء الكيوركود من العرض الخارجي (Snapshot)
+function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, isPrint, showQR = true) {
   const prefix = isPrint ? 'printQR' : 'modalQR';
+  const qrStyle = showQR ? 'display: flex;' : 'display: none !important;';
   return `
     <div class="invoice-wrapper" style="background:#ffffff; color:#000;">
       <div class="invoice-header-flex">
@@ -1236,7 +1238,8 @@ function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeSt
         </div>
       </div>
 
-      <div class="dual-qr-container">
+      <!-- نظام الكيوركود المزدوج - يتم إخفاؤه تماماً في العرض الخارجي لمنع التكرار -->
+      <div class="dual-qr-container" style="${qrStyle}">
         <div class="qr-box">
           <canvas id="${prefix}1"></canvas>
           <p style="color:#000;">تفاصيل الفاتورة</p>
@@ -1275,8 +1278,9 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
     </tr>
   `).join('');
 
-  $('#invView').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, false);
-  $('#print-area').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, true);
+  // عرض الفاتورة بالكيوركود المزدوج داخل التطبيق الأصلي
+  $('#invView').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, false, true);
+  $('#print-area').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, true, true);
   $('#invModal').classList.add('show');
 
   // توليد روابط الكيو آر كود المزدوجة الديناميكية
@@ -1284,10 +1288,10 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
     try {
       const baseUrl = window.location.origin + window.location.pathname;
       
-      // QR 1: Invoice Snapshot URL
+      // QR 1: رابط الفاتورة المباشر (Snapshot) - عند مسحه بالهاتف يفتح الفاتورة كصورة بدون كيور كود بداخلها
       const qr1Url = `${baseUrl}?view=inv&id=${inv._id}`;
       
-      // QR 2: Live Statement URL (Fallback to invoice if cash customer)
+      // QR 2: رابط كشف الحساب المتصل المباشر - يعرض كشف الحساب محدث بالكامل ومباشر
       let qr2Url = `${baseUrl}?view=inv&id=${inv._id}`; 
       if(custId) {
         qr2Url = `${baseUrl}?view=statement&id=${custId}`;
@@ -1304,8 +1308,9 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
   }, 100);
 }
 
-function generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, isPrint) {
+function generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, isPrint, showQR = true) {
   const prefix = isPrint ? 'printQR' : 'modalQR';
+  const qrStyle = showQR ? 'display: flex;' : 'display: none !important;';
   return `
     <div class="invoice-wrapper" style="background:#ffffff; color:#000;">
       <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #cbd5e1; padding-bottom: 15px;">
@@ -1337,7 +1342,7 @@ function generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, isPri
         </div>
       </div>
 
-      <div class="dual-qr-container">
+      <div class="dual-qr-container" style="${qrStyle}">
         <div class="qr-box">
           <canvas id="${prefix}1"></canvas>
           <p style="color:#000;">توثيق الدفعة</p>
@@ -1361,8 +1366,8 @@ function showReceipt(cName, amt, currentBalance, custId, customDateIso = null) {
   const dateStr = dateObj.toLocaleDateString('en-CA').replace(/-/g, '/');
   const timeStr = dateObj.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
 
-  $('#invView').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, false);
-  $('#print-area').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, true);
+  $('#invView').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, false, true);
+  $('#print-area').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, true, true);
   $('#invModal').classList.add('show');
 
   // توليد روابط الكيو آر كود للإيصال
@@ -1490,6 +1495,7 @@ function closeModal(id){ $('#'+id).classList.remove('show'); }
 
 // ============ EXTERNAL DOCUMENT RENDERERS (NEW QR FEATURES) ============
 
+// دالة عرض الفاتورة الخارجية المعدلة لتظهر كصورة الفاتورة الأصلية تماماً وبدون أي أكواد كيوركود بداخلها
 async function renderExternalInvoice(invId) {
   const { db, ref, get } = await waitFB();
   const snapshot = await get(ref(db, 'invoices/' + invId));
@@ -1510,18 +1516,17 @@ async function renderExternalInvoice(invId) {
 
   let itemsHtml = (inv.items || []).map((it, i) => `
     <tr>
-      <td style="font-weight:900;">${fmt(it.sell * it.qty)}</td>
-      <td>${fmt(it.sell)}</td>
-      <td style="font-weight:bold;">${it.qty}</td>
+      <td style="font-weight:900; color:#000;">${fmt(it.sell * it.qty)}</td>
+      <td style="color:#000;">${fmt(it.sell)}</td>
+      <td style="font-weight:bold; color:#000;">${it.qty}</td>
       <td style="color:#64748b; font-size:12px;">${it.unit || ''}</td>
-      <td style="text-align:right;">${it.name}</td>
-      <td>${i + 1}</td>
+      <td style="text-align:right; color:#000;">${it.name}</td>
+      <td style="color:#000;">${i + 1}</td>
     </tr>
   `).join('');
 
-  // إخفاء منطقة الكيو آر كود داخل العرض الخارجي لمنع التكرار
-  document.getElementById('printableDocument').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentRem, dateStr, timeStr, itemsHtml, false)
-    .replace('<div class="dual-qr-container">', '<div class="dual-qr-container" style="display:none;">'); 
+  // استدعاء دالة توليد الفاتورة مع تمرير المعامل الأخير (showQR = false) لإخفاء الكيوركود تماماً
+  document.getElementById('printableDocument').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentRem, dateStr, timeStr, itemsHtml, false, false);
 }
 
 async function renderExternalStatement(custId) {

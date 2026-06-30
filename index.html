@@ -1182,7 +1182,11 @@ $('#invSearch2')?.addEventListener('input',renderInvoiceList);
 function viewInvoice(id){ 
   const inv = STATE.invoices[id];
   const prevDebt = inv.customerId ? Math.max(0, custStats(inv.customerId).debt - ((+inv.total||0)-(+inv.paid||0))) : 0; 
-  showInvoice({...inv, _id:id}, prevDebt, inv.customerId); 
+  viewInvoiceEx(inv, prevDebt, inv.customerId); 
+}
+
+function viewInvoiceEx(inv, prevDebt, customerId) {
+  showInvoice({...inv, _id:inv._id || uid()}, prevDebt, customerId);
 }
 
 const programmerFooterHTML = `
@@ -1193,7 +1197,7 @@ const programmerFooterHTML = `
   </div>
 `;
 
-// دالة توليد الفاتورة المعدلة لتدعم إخفاء الكيوركود من العرض الخارجي (Snapshot)
+// دالة توليد الفاتورة مع خيار إخفاء الكيوركود (showQR)
 function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, isPrint, showQR = true) {
   const prefix = isPrint ? 'printQR' : 'modalQR';
   const qrStyle = showQR ? 'display: flex;' : 'display: none !important;';
@@ -1238,7 +1242,7 @@ function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeSt
         </div>
       </div>
 
-      <!-- نظام الكيوركود المزدوج - يتم إخفاؤه تماماً في العرض الخارجي لمنع التكرار -->
+      <!-- نظام الكيوركود المزدوج - يتم إخفاؤه تماماً في الحالات المطلوبة وعند طباعة الصور المصدرة -->
       <div class="dual-qr-container" style="${qrStyle}">
         <div class="qr-box">
           <canvas id="${prefix}1"></canvas>
@@ -1278,23 +1282,154 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
     </tr>
   `).join('');
 
-  // عرض الفاتورة بالكيوركود المزدوج داخل التطبيق الأصلي
+  // عرض الفاتورة بالكيوركود المزدوج داخل شاشة العرض فقط
   $('#invView').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, false, true);
   $('#print-area').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, true, true);
   $('#invModal').classList.add('show');
 
-  // توليد روابط الكيو آر كود المزدوجة الديناميكية
+  // توليد الكيوركود الجديد المنفصل تماماً عن رابط الموقع
   setTimeout(() => {
     try {
-      const baseUrl = window.location.origin + window.location.pathname;
       
-      // QR 1: رابط الفاتورة المباشر (Snapshot) - عند مسحه بالهاتف يفتح الفاتورة كصورة بدون كيور كود بداخلها
-      const qr1Url = `${baseUrl}?view=inv&id=${inv._id}`;
-      
-      // QR 2: رابط كشف الحساب المتصل المباشر - يعرض كشف الحساب محدث بالكامل ومباشر
-      let qr2Url = `${baseUrl}?view=inv&id=${inv._id}`; 
-      if(custId) {
-        qr2Url = `${baseUrl}?view=statement&id=${custId}`;
+      // 1. الكيوركود الأول: الفاتورة الذاتية (Data URL HTML) - خالية من رابط الموقع وتعمل بدون إنترنت
+      const invoiceStaticHTML = `
+      <html lang="ar" dir="rtl">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>فاتورة ${inv.no}</title>
+        <style>
+          body{font-family:'Cairo',sans-serif;margin:10px;font-size:12px;color:#000;background:#fff;line-height:1.4}
+          .header{border-bottom:1px solid #ccc;padding-bottom:10px;margin-bottom:10px}
+          table{width:100%;border-collapse:collapse;margin:10px 0}
+          th,td{border:1px solid #cbd5e1;padding:6px;text-align:center}
+          th{background:#f8fafc;font-weight:bold}
+          .total-box{border:1px solid #cbd5e1;padding:6px;width:180px;margin-right:auto;border-radius:6px;background:#f8fafc}
+          .total-row{display:flex;justify-content:space-between;padding:3px 0}
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h3 style="margin:0 0 5px 0">${s.name || 'الصيدلية البيطرية'}</h3>
+          <div>العميل: <b>${inv.customerName}</b></div>
+          <div>رقم الفاتورة: <b>${inv.no}</b> (${currentRem > 0 ? 'آجل' : 'نقدي'})</div>
+          <div>التاريخ: ${dateStr} | الوقت: ${timeStr}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>الإجمالي</th>
+              <th>السعر</th>
+              <th>الكمية</th>
+              <th style="text-align:right">الصنف</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(inv.items||[]).map(it => `
+              <tr>
+                <td>${fmt(it.sell * it.qty)}</td>
+                <td>${fmt(it.sell)}</td>
+                <td>${it.qty}</td>
+                <td style="text-align:right">${it.name}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="total-box">
+          <div class="total-row"><span>الإجمالي:</span><b>${fmt(inv.total)}</b></div>
+          <div class="total-row"><span>المدفوع:</span><b>${fmt(inv.paid)}</b></div>
+          <div class="total-row"><span>الرصيد السابق:</span><b>${fmt(currentBalance - currentRem)}</b></div>
+          <div class="total-row" style="color:#dc2626"><span>الرصيد الحالي:</span><b>${fmt(currentBalance)}</b></div>
+        </div>
+        <p style="text-align:center;font-size:10px;color:#475569;margin-top:20px;border-top:1px dashed #ccc;padding-top:10px">برمجة وتطوير: توماس شنودة فرح (01288769853)</p>
+      </body>
+      </html>`;
+
+      const qr1Url = 'data:text/html;charset=utf-8,' + encodeURIComponent(invoiceStaticHTML.replace(/\s+/g, ' '));
+
+      // 2. الكيوركود الثاني: كشف الحساب المباشر الحر (يتصل مباشرة بقاعدة البيانات الرسمية دون المرور برابط موقعك)
+      let qr2Url = qr1Url;
+      if (custId) {
+        const statementLiveHTML = `
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>كشف الحساب</title>
+          <style>
+            body{font-family:'Cairo',sans-serif;margin:10px;font-size:12px;color:#000;background:#fff;line-height:1.4}
+            .header{border-bottom:1px solid #ccc;padding-bottom:10px;margin-bottom:10px}
+            table{width:100%;border-collapse:collapse;margin:10px 0}
+            th,td{border:1px solid #cbd5e1;padding:6px;text-align:center}
+            th{background:#f8fafc;font-weight:bold}
+            .loader{text-align:center;padding:20px;font-weight:bold;color:#2563eb}
+          </style>
+        </head>
+        <body>
+          <div id="load" class="loader">⏳ جاري تحميل كشف الحساب المباشر...</div>
+          <div id="content" style="display:none">
+            <div class="header">
+              <h3 style="margin:0 0 5px 0" id="biz">${s.name || 'الصيدلية البيطرية'}</h3>
+              <div>كشف حساب العميل: <b id="cname"></b></div>
+              <div id="cphone"></div>
+              <div style="margin-top:5px;font-weight:bold;color:#dc2626">الرصيد الحالي المباشر: <span id="curbal">0.00</span> ج.م</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>الرصيد</th>
+                  <th>دائن</th>
+                  <th>مدين</th>
+                  <th>البيان</th>
+                  <th>التاريخ</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+            <p style="text-align:center;font-size:10px;color:#475569;margin-top:20px;border-top:1px dashed #ccc;padding-top:10px">برمجة وتطوير: توماس شنودة فرح (01288769853)</p>
+          </div>
+          <script>
+            const cid = "${custId}";
+            const fmt = n => (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+            Promise.all([
+              fetch("https://abanob-426e8-default-rtdb.firebaseio.com/customers/" + cid + ".json").then(r=>r.json()),
+              fetch("https://abanob-426e8-default-rtdb.firebaseio.com/invoices.json").then(r=>r.json())
+            ]).then(([c, invs]) => {
+              if(!c) { document.body.innerHTML = "<h3>خطأ في التحميل</h3>"; return; }
+              document.getElementById("load").style.display = "none";
+              document.getElementById("content").style.display = "block";
+              document.getElementById("cname").innerText = c.name;
+              document.getElementById("cphone").innerText = "الهاتف: " + (c.phone || "غير مسجل");
+              
+              let tx = [];
+              if(invs) {
+                Object.values(invs).forEach(inv => {
+                  if(inv.customerId === cid) {
+                    tx.push({ d: new Date(inv.date), type: "فاتورة " + inv.no, dr: +inv.total, cr: +inv.paid });
+                  }
+                });
+              }
+              if(c.payments) {
+                Object.entries(c.payments).forEach(([pid, p]) => {
+                  tx.push({ d: new Date(p.date), type: "سند قبض", dr: 0, cr: +p.amt });
+                });
+              }
+              tx.sort((a,b) => a.d - b.d);
+              let bal = 0, html = "";
+              tx.forEach(t => {
+                bal = bal + t.dr - t.cr;
+                html += "<tr><td>" + fmt(bal) + "</td><td style='color:green'>" + (t.cr ? fmt(t.cr) : "-") + "</td><td style='color:red'>" + (t.dr ? fmt(t.dr) : "-") + "</td><td>" + t.type + "</td><td>" + t.d.toLocaleDateString('en-CA') + "</td></tr>";
+              });
+              document.getElementById("rows").innerHTML = html;
+              document.getElementById("curbal").innerText = fmt(bal);
+            }).catch(e => {
+              document.getElementById("load").innerText = "خطأ في الاتصال بالخادم المباشر";
+            });
+          <\/script>
+        </body>
+        </html>`;
+
+        qr2Url = 'data:text/html;charset=utf-8,' + encodeURIComponent(statementLiveHTML.replace(/\s+/g, ' '));
       }
 
       const q1 = document.getElementById('modalQR1'); const q2 = document.getElementById('modalQR2');
@@ -1370,19 +1505,129 @@ function showReceipt(cName, amt, currentBalance, custId, customDateIso = null) {
   $('#print-area').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, true, true);
   $('#invModal').classList.add('show');
 
-  // توليد روابط الكيو آر كود للإيصال
+  // توليد كود السند بشكل معزول ومكتمل داخلياً أيضاً
   setTimeout(() => {
     try {
-      const baseUrl = window.location.origin + window.location.pathname;
-      const qr1Text = `سند قبض\nالعميل: ${cName}\nالمبلغ المسدد: ${fmt(amt)} ج.م\nالتاريخ: ${dateStr}`;
-      let qr2Url = `${baseUrl}?view=statement&id=${custId}`;
+      const receiptStaticHTML = `
+      <html lang="ar" dir="rtl">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>إيصال سداد</title>
+        <style>
+          body{font-family:'Cairo',sans-serif;margin:15px;text-align:center;font-size:12px;color:#000;background:#fff;line-height:1.4}
+          .box{border:2px dashed #22c55e;background:#f0fdf4;padding:15px;margin:15px 0;border-radius:8px}
+          .header{border-bottom:1px solid #ccc;padding-bottom:10px;margin-bottom:15px}
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2 style="margin:0;font-size:18px;color:#0f172a">سند قبض / إيصال سداد</h2>
+          <p style="margin:5px 0 0 0;color:#475569">${STATE.settings.name || 'الصيدلية البيطرية'}</p>
+        </div>
+        <p>استلمنا من السيد/ة: <b style="font-size:14px">${cName}</b></p>
+        <div class="box">
+          <span style="font-size:11px;color:#166534">مبلغاً وقدره</span>
+          <h2 style="margin:5px 0;font-size:24px;color:#15803d">${fmt(amt)} ج.م</h2>
+        </div>
+        <p>المديونية المتبقية حالياً: <b>${fmt(currentBalance)} ج.م</b></p>
+        <p style="color:#64748b;font-size:11px">التاريخ: ${dateStr} | الوقت: ${timeStr}</p>
+        <p style="text-align:center;font-size:10px;color:#475569;margin-top:20px;border-top:1px dashed #ccc;padding-top:10px">برمجة وتطوير: توماس شنودة فرح (01288769853)</p>
+      </body>
+      </html>`;
+
+      const qr1Url = 'data:text/html;charset=utf-8,' + encodeURIComponent(receiptStaticHTML.replace(/\s+/g, ' '));
+
+      let qr2Url = qr1Url;
+      if (custId) {
+        const statementLiveHTML = `
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>كشف الحساب</title>
+          <style>
+            body{font-family:'Cairo',sans-serif;margin:10px;font-size:12px;color:#000;background:#fff;line-height:1.4}
+            .header{border-bottom:1px solid #ccc;padding-bottom:10px;margin-bottom:10px}
+            table{width:100%;border-collapse:collapse;margin:10px 0}
+            th,td{border:1px solid #cbd5e1;padding:6px;text-align:center}
+            th{background:#f8fafc;font-weight:bold}
+            .loader{text-align:center;padding:20px;font-weight:bold;color:#2563eb}
+          </style>
+        </head>
+        <body>
+          <div id="load" class="loader">⏳ جاري تحميل كشف الحساب المباشر...</div>
+          <div id="content" style="display:none">
+            <div class="header">
+              <h3 style="margin:0 0 5px 0" id="biz">${STATE.settings.name || 'الصيدلية البيطرية'}</h3>
+              <div>كشف حساب العميل: <b id="cname"></b></div>
+              <div id="cphone"></div>
+              <div style="margin-top:5px;font-weight:bold;color:#dc2626">الرصيد الحالي المباشر: <span id="curbal">0.00</span> ج.م</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>الرصيد</th>
+                  <th>دائن</th>
+                  <th>مدين</th>
+                  <th>البيان</th>
+                  <th>التاريخ</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+            <p style="text-align:center;font-size:10px;color:#475569;margin-top:20px;border-top:1px dashed #ccc;padding-top:10px">برمجة وتطوير: توماس شنودة فرح (01288769853)</p>
+          </div>
+          <script>
+            const cid = "${custId}";
+            const fmt = n => (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+            Promise.all([
+              fetch("https://abanob-426e8-default-rtdb.firebaseio.com/customers/" + cid + ".json").then(r=>r.json()),
+              fetch("https://abanob-426e8-default-rtdb.firebaseio.com/invoices.json").then(r=>r.json())
+            ]).then(([c, invs]) => {
+              if(!c) { document.body.innerHTML = "<h3>خطأ في التحميل</h3>"; return; }
+              document.getElementById("load").style.display = "none";
+              document.getElementById("content").style.display = "block";
+              document.getElementById("cname").innerText = c.name;
+              document.getElementById("cphone").innerText = "الهاتف: " + (c.phone || "غير مسجل");
+              
+              let tx = [];
+              if(invs) {
+                Object.values(invs).forEach(inv => {
+                  if(inv.customerId === cid) {
+                    tx.push({ d: new Date(inv.date), type: "فاتورة " + inv.no, dr: +inv.total, cr: +inv.paid });
+                  }
+                });
+              }
+              if(c.payments) {
+                Object.entries(c.payments).forEach(([pid, p]) => {
+                  tx.push({ d: new Date(p.date), type: "سند قبض", dr: 0, cr: +p.amt });
+                });
+              }
+              tx.sort((a,b) => a.d - b.d);
+              let bal = 0, html = "";
+              tx.forEach(t => {
+                bal = bal + t.dr - t.cr;
+                html += "<tr><td>" + fmt(bal) + "</td><td style='color:green'>" + (t.cr ? fmt(t.cr) : "-") + "</td><td style='color:red'>" + (t.dr ? fmt(t.dr) : "-") + "</td><td>" + t.type + "</td><td>" + t.d.toLocaleDateString('en-CA') + "</td></tr>";
+              });
+              document.getElementById("rows").innerHTML = html;
+              document.getElementById("curbal").innerText = fmt(bal);
+            }).catch(e => {
+              document.getElementById("load").innerText = "خطأ في الاتصال بالخادم المباشر";
+            });
+          <\/script>
+        </body>
+        </html>`;
+
+        qr2Url = 'data:text/html;charset=utf-8,' + encodeURIComponent(statementLiveHTML.replace(/\s+/g, ' '));
+      }
 
       const q1 = document.getElementById('modalQR1'); const q2 = document.getElementById('modalQR2');
       const q3 = document.getElementById('printQR1'); const q4 = document.getElementById('printQR2');
       
-      if(q1) new QRious({ element: q1, value: qr1Text, size: 140 });
+      if(q1) new QRious({ element: q1, value: qr1Url, size: 140 });
       if(q2) new QRious({ element: q2, value: qr2Url, size: 140 });
-      if(q3) new QRious({ element: q3, value: qr1Text, size: 140 });
+      if(q3) new QRious({ element: q3, value: qr1Url, size: 140 });
       if(q4) new QRious({ element: q4, value: qr2Url, size: 140 });
     } catch (e) { console.error("QR Code Error:", e); }
   }, 100);
@@ -1495,7 +1740,6 @@ function closeModal(id){ $('#'+id).classList.remove('show'); }
 
 // ============ EXTERNAL DOCUMENT RENDERERS (NEW QR FEATURES) ============
 
-// دالة عرض الفاتورة الخارجية المعدلة لتظهر كصورة الفاتورة الأصلية تماماً وبدون أي أكواد كيوركود بداخلها
 async function renderExternalInvoice(invId) {
   const { db, ref, get } = await waitFB();
   const snapshot = await get(ref(db, 'invoices/' + invId));
@@ -1525,8 +1769,8 @@ async function renderExternalInvoice(invId) {
     </tr>
   `).join('');
 
-  // استدعاء دالة توليد الفاتورة مع تمرير المعامل الأخير (showQR = false) لإخفاء الكيوركود تماماً
-  document.getElementById('printableDocument').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentRem, dateStr, timeStr, itemsHtml, false, false);
+  // إخفاء منطقة الكيو آر كود داخل العرض الخارجي تماماً لمنع التكرار والحصول على صورة نظيفة
+  document.getElementById('printableDocument').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentRem, dateStr, timeStr, itemsHtml, false, false); 
 }
 
 async function renderExternalStatement(custId) {
@@ -1575,10 +1819,10 @@ async function renderExternalStatement(custId) {
     });
   }
   
-  // ج. الدفعات السابقة (للتوافق مع بياناتك القديمة إذا وجدت)
+  // ج. الدفعات السابقة
   if (c.extraPaid && (!c.payments || Object.keys(c.payments).length === 0)) {
      transactions.push({
-        date: new Date(0), // تاريخ قديم ليكون في البداية
+        date: new Date(0), 
         type: 'رصيد افتتاحي / دفعات سابقة',
         docNo: '-',
         debit: 0,

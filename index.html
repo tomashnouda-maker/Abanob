@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
   /* متغيرات الألوان للوضع الليلي (الافتراضي) */
@@ -226,9 +227,11 @@
     body * { visibility: hidden !important; }
     #print-area, #print-area * { visibility: visible !important; color: #000 !important; background: #fff !important; }
     #print-area { position: absolute; left: 0; top: 0; padding: 0; width: 100%; }
-    .app, .modal { display: none !important; }
+    .app, .modal, .external-viewer .floating-action-bar { display: none !important; }
     .inv-table th { background: transparent !important; }
     .programmer-footer { background: transparent !important; }
+    .external-viewer { padding: 0 !important; background: #fff !important; }
+    .document-container { box-shadow: none !important; max-width: 100% !important; border-radius: 0 !important; }
   }
 
   .menu-btn{display:none;background:var(--hover-bg);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:10px;font-weight:800}
@@ -252,6 +255,66 @@
   .profile-list-item { background:var(--hover-bg); padding:10px; border-radius:10px; border:1px solid var(--line); margin-bottom:8px; transition: 0.2s;}
   .profile-list-item:hover { background: rgba(128,128,128,0.1); transform: translateX(-4px); }
   .profile-list-item div { display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;}
+
+  /* ============ EXTERNAL DOCUMENT VIEWER ============ */
+  .external-viewer {
+    background: #f1f5f9;
+    min-height: 100vh;
+    padding: 40px 20px 100px 20px;
+    display: flex;
+    justify-content: center;
+    font-family: 'Cairo', sans-serif;
+  }
+  .document-container {
+    background: #fff;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .floating-action-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    padding: 12px 24px;
+    border-radius: 999px;
+    display: flex;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    z-index: 1000;
+  }
+  .floating-action-bar button {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  .floating-action-bar button:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+  }
+  .ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+  }
+  .ledger-table th, .ledger-table td {
+    border: 1px solid #cbd5e1;
+    padding: 10px;
+    text-align: center;
+    color: #000;
+  }
+  .ledger-table th { background: #f8fafc; font-weight: 800; }
+  .text-danger { color: #dc2626 !important; font-weight: bold; }
+  .text-success { color: #16a34a !important; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -725,17 +788,53 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 (async ()=>{
   const {db, ref, onValue} = await waitFB();
+  
+  // فحص الراوتر الخارجي أولاً: إذا كان الرابط لعارض المستندات سيتم إيقاف تشغيل التطبيق العادي
+  const isExternalView = await checkUrlRouting();
+  if (isExternalView) return; 
+
   onValue(ref(db,'items'),s=>{ const v=s.val()||{}; STATE.items=v; LS.set('items',v); renderAll(); });
   onValue(ref(db,'customers'),s=>{ const v=s.val()||{}; STATE.customers=v; LS.set('customers',v); renderAll(); });
   onValue(ref(db,'invoices'),s=>{ const v=s.val()||{}; STATE.invoices=v; LS.set('invoices',v); renderAll(); });
   onValue(ref(db,'settings'),s=>{ const v=s.val()||STATE.settings; STATE.settings=v; applySettings(); });
-  
-  // التحقق من الرابط القادم من الكيو آر كود
-  setTimeout(checkUrlRouting, 800);
 })();
 
-function checkUrlRouting() {
+async function checkUrlRouting() {
   const params = new URLSearchParams(window.location.search);
+  
+  if (params.has('view')) {
+    const view = params.get('view');
+    const id = params.get('id');
+    
+    // إخفاء التطبيق بالكامل
+    document.querySelector('.app').style.display = 'none';
+    
+    // إنشاء حاوية العرض الخارجي
+    const viewer = document.createElement('div');
+    viewer.className = 'external-viewer';
+    viewer.innerHTML = `
+      <div class="document-container" id="printableDocument" style="background:#fff; min-height:500px; display:flex; align-items:center; justify-content:center;">
+        <h3>⏳ جاري جلب البيانات...</h3>
+      </div>
+      <div class="floating-action-bar">
+        <button onclick="window.print()">🖨️ طباعة</button>
+        <button onclick="downloadExternalPDF()">📄 تحميل PDF</button>
+        <button onclick="downloadExternalPNG()">📸 تحميل صورة</button>
+      </div>
+    `;
+    document.body.appendChild(viewer);
+
+    // تسجيل الفحص (Logging)
+    logScan(view, id);
+
+    // عرض المستند المطلوب
+    if (view === 'inv') await renderExternalInvoice(id);
+    if (view === 'statement') await renderExternalStatement(id);
+    
+    return true; // Stop normal app execution
+  }
+  
+  // نظام التوجيه القديم من داخل التطبيق
   if(params.has('inv')) {
     const invId = params.get('inv');
     if(STATE.invoices[invId]) viewInvoice(invId);
@@ -744,6 +843,7 @@ function checkUrlRouting() {
     const custId = params.get('cust');
     if(STATE.customers[custId]) viewCustomerProfile(custId);
   }
+  return false;
 }
 
 function applySettings(){ $('#setName').value=STATE.settings.name||''; $('#setPhone').value=STATE.settings.phone||''; $('#setAddr').value=STATE.settings.addr||''; $('#setCurr').value=STATE.settings.curr||'جنيه'; }
@@ -860,7 +960,6 @@ function viewCustomerProfile(id) {
   $('#profPhone').textContent = c.phone || 'غير مسجل';
   $('#profDebt').textContent = fmt(st.debt);
   
-  // الفواتير أصبحت قابلة للضغط
   const invsHtml = st.invoices.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(inv => {
     const dStr = new Date(inv.date).toLocaleDateString('en-CA');
     return `<div class="profile-list-item" style="cursor:pointer" onclick="viewInvoice('${inv._id}')">
@@ -870,7 +969,6 @@ function viewCustomerProfile(id) {
   }).join('');
   $('#profInvoicesList').innerHTML = invsHtml || '<div class="empty" style="padding:10px;">لا توجد فواتير</div>';
   
-  // السدادات أصبحت قابلة للضغط
   let paysHtml = '';
   if (c.payments) {
     paysHtml = Object.entries(c.payments).sort((a,b)=>new Date(b[1].date)-new Date(a[1].date)).map(([pId, p]) => {
@@ -887,12 +985,10 @@ function viewCustomerProfile(id) {
   $('#custProfileModal').classList.add('show');
 }
 
-// عرض إيصال سداد سابق
 function viewPastReceipt(custId, payId) {
   const c = STATE.customers[custId];
   if(!c || !c.payments || !c.payments[payId]) return;
   const p = c.payments[payId];
-  // نعرض الرصيد الحالي للعميل في الإيصال كمعلومة عامة
   const currentBalance = custStats(custId).debt;
   showReceipt(c.name, p.amt, currentBalance, custId, p.date);
 }
@@ -903,7 +999,6 @@ function openPay(id){
   $('#payModal').classList.add('show'); 
 }
 
-// السداد وإصدار الإيصال تلقائياً
 async function confirmPay(){ 
   const {db,ref,update} = await waitFB(); 
   const amt = +$('#payAmt').value||0; 
@@ -920,7 +1015,6 @@ async function confirmPay(){
   
   await update(ref(db), updates); 
   
-  // تحديث محلي فوري لإظهار الرصيد الصحيح في الإيصال
   if(!STATE.customers[id].payments) STATE.customers[id].payments = {};
   STATE.customers[id].extraPaid = (+c.extraPaid||0)+amt;
   STATE.customers[id].payments[payId] = { amt: amt, date: dateStr };
@@ -935,7 +1029,6 @@ async function confirmPay(){
     viewCustomerProfile(id);
   }
 
-  // إظهار إيصال السداد مباشرة
   showReceipt(c.name, amt, updatedDebt, id, dateStr);
 }
 
@@ -1186,20 +1279,27 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
   $('#print-area').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeStr, itemsHtml, true);
   $('#invModal').classList.add('show');
 
-  // توليد الباركود بروابط حقيقية للموقع
+  // توليد روابط الكيو آر كود المزدوجة الديناميكية
   setTimeout(() => {
     try {
-      const qr1Url = getBaseUrl() + "?inv=" + inv._id;
-      let qr2Url = "عميل نقدي";
-      if(custId) qr2Url = getBaseUrl() + "?cust=" + custId;
+      const baseUrl = window.location.origin + window.location.pathname;
+      
+      // QR 1: Invoice Snapshot URL
+      const qr1Url = `${baseUrl}?view=inv&id=${inv._id}`;
+      
+      // QR 2: Live Statement URL (Fallback to invoice if cash customer)
+      let qr2Url = `${baseUrl}?view=inv&id=${inv._id}`; 
+      if(custId) {
+        qr2Url = `${baseUrl}?view=statement&id=${custId}`;
+      }
 
       const q1 = document.getElementById('modalQR1'); const q2 = document.getElementById('modalQR2');
       const q3 = document.getElementById('printQR1'); const q4 = document.getElementById('printQR2');
 
-      if(q1) new QRious({ element: q1, value: String(qr1Url), size: 140 });
-      if(q2) new QRious({ element: q2, value: String(qr2Url), size: 140 });
-      if(q3) new QRious({ element: q3, value: String(qr1Url), size: 140 });
-      if(q4) new QRious({ element: q4, value: String(qr2Url), size: 140 });
+      if(q1) new QRious({ element: q1, value: qr1Url, size: 140 });
+      if(q2) new QRious({ element: q2, value: qr2Url, size: 140 });
+      if(q3) new QRious({ element: q3, value: qr1Url, size: 140 });
+      if(q4) new QRious({ element: q4, value: qr2Url, size: 140 });
     } catch (e) { console.error("QR Code Error:", e); }
   }, 100);
 }
@@ -1265,18 +1365,20 @@ function showReceipt(cName, amt, currentBalance, custId, customDateIso = null) {
   $('#print-area').innerHTML = generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, true);
   $('#invModal').classList.add('show');
 
+  // توليد روابط الكيو آر كود للإيصال
   setTimeout(() => {
     try {
-      const qr1Url = getBaseUrl() + "?cust=" + custId; // نفتح بروفايل العميل للتأكيد
-      const qr2Url = getBaseUrl() + "?cust=" + custId; // كشف الحساب هو البروفايل
+      const baseUrl = window.location.origin + window.location.pathname;
+      const qr1Text = `سند قبض\nالعميل: ${cName}\nالمبلغ المسدد: ${fmt(amt)} ج.م\nالتاريخ: ${dateStr}`;
+      let qr2Url = `${baseUrl}?view=statement&id=${custId}`;
 
       const q1 = document.getElementById('modalQR1'); const q2 = document.getElementById('modalQR2');
       const q3 = document.getElementById('printQR1'); const q4 = document.getElementById('printQR2');
       
-      if(q1) new QRious({ element: q1, value: String(qr1Url), size: 140 });
-      if(q2) new QRious({ element: q2, value: String(qr2Url), size: 140 });
-      if(q3) new QRious({ element: q3, value: String(qr1Url), size: 140 });
-      if(q4) new QRious({ element: q4, value: String(qr2Url), size: 140 });
+      if(q1) new QRious({ element: q1, value: qr1Text, size: 140 });
+      if(q2) new QRious({ element: q2, value: qr2Url, size: 140 });
+      if(q3) new QRious({ element: q3, value: qr1Text, size: 140 });
+      if(q4) new QRious({ element: q4, value: qr2Url, size: 140 });
     } catch (e) { console.error("QR Code Error:", e); }
   }, 100);
 }
@@ -1287,11 +1389,17 @@ async function sendInvoiceWhatsApp(btn) {
   if(!invoiceElement) return;
   
   let phone = currentSharePhone;
+  
   if(!phone || phone.trim() === '') {
     phone = prompt('أدخل رقم واتساب للعميل (مع كود الدولة، مثال 201xxxxxxxxx):', '201');
     if(!phone) return;
-  } else {
-    if(phone.startsWith('01')) phone = '2' + phone; 
+  }
+  
+  phone = phone.replace(/[^0-9+]/g, '');
+  if(phone.startsWith('01') && phone.length === 11) {
+    phone = '2' + phone; 
+  } else if (phone.startsWith('+')) {
+    phone = phone.replace('+', '');
   }
 
   const originalText = btn.innerHTML;
@@ -1379,6 +1487,231 @@ async function importExcel(e){
 }
 
 function closeModal(id){ $('#'+id).classList.remove('show'); }
+
+// ============ EXTERNAL DOCUMENT RENDERERS (NEW QR FEATURES) ============
+
+async function renderExternalInvoice(invId) {
+  const { db, ref, get } = await waitFB();
+  const snapshot = await get(ref(db, 'invoices/' + invId));
+  if (!snapshot.exists()) {
+    document.getElementById('printableDocument').innerHTML = '<h3 style="padding:40px;text-align:center; color:#000;">الفاتورة غير موجودة أو تم حذفها.</h3>';
+    return;
+  }
+  
+  const inv = snapshot.val();
+  const s = STATE.settings || { name: 'الصيدلية البيطرية' };
+  
+  // نظراً لأنها فاتورة محفوظة (Snapshot)، نحسب المتبقي بناءً على وقت إنشائها تماماً
+  const currentRem = Math.max(0, (+inv.total || 0) - (+inv.paid || 0));
+  
+  const dateObj = new Date(inv.date);
+  const dateStr = dateObj.toLocaleDateString('en-CA').replace(/-/g, '/');
+  const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  let itemsHtml = (inv.items || []).map((it, i) => `
+    <tr>
+      <td style="font-weight:900;">${fmt(it.sell * it.qty)}</td>
+      <td>${fmt(it.sell)}</td>
+      <td style="font-weight:bold;">${it.qty}</td>
+      <td style="color:#64748b; font-size:12px;">${it.unit || ''}</td>
+      <td style="text-align:right;">${it.name}</td>
+      <td>${i + 1}</td>
+    </tr>
+  `).join('');
+
+  // إخفاء منطقة الكيو آر كود داخل العرض الخارجي لمنع التكرار
+  document.getElementById('printableDocument').innerHTML = generateInvoiceHTML(inv, s, currentRem, currentRem, dateStr, timeStr, itemsHtml, false)
+    .replace('<div class="dual-qr-container">', '<div class="dual-qr-container" style="display:none;">'); 
+}
+
+async function renderExternalStatement(custId) {
+  const { db, ref, get } = await waitFB();
+  const [custSnap, invSnap] = await Promise.all([
+    get(ref(db, 'customers/' + custId)),
+    get(ref(db, 'invoices'))
+  ]);
+
+  if (!custSnap.exists()) {
+    document.getElementById('printableDocument').innerHTML = '<h3 style="padding:40px;text-align:center; color:#000;">حساب العميل غير موجود.</h3>';
+    return;
+  }
+
+  const c = custSnap.val();
+  const allInvoices = invSnap.val() || {};
+  
+  // 1. تجميع كل الحركات المالية الخاصة بالعميل
+  let transactions = [];
+  
+  // أ. الفواتير (مدين - يزيد من مديونية العميل)
+  Object.entries(allInvoices).forEach(([iId, inv]) => {
+    if (inv.customerId === custId) {
+      transactions.push({
+        date: new Date(inv.date),
+        type: 'فاتورة مبيعات',
+        docNo: inv.no,
+        debit: +inv.total || 0,
+        credit: +inv.paid || 0, 
+        desc: `فاتورة رقم ${inv.no}`
+      });
+    }
+  });
+
+  // ب. الدفعات المنفصلة المسددة (دائن - يقلل من مديونية العميل)
+  if (c.payments) {
+    Object.entries(c.payments).forEach(([pId, pay]) => {
+      transactions.push({
+        date: new Date(pay.date),
+        type: 'سند قبض',
+        docNo: pId.slice(-6).toUpperCase(),
+        debit: 0,
+        credit: +pay.amt || 0,
+        desc: 'سداد دفعة نقدية'
+      });
+    });
+  }
+  
+  // ج. الدفعات السابقة (للتوافق مع بياناتك القديمة إذا وجدت)
+  if (c.extraPaid && (!c.payments || Object.keys(c.payments).length === 0)) {
+     transactions.push({
+        date: new Date(0), // تاريخ قديم ليكون في البداية
+        type: 'رصيد افتتاحي / دفعات سابقة',
+        docNo: '-',
+        debit: 0,
+        credit: +c.extraPaid || 0,
+        desc: 'رصيد دائن سابق'
+      });
+  }
+
+  // 2. الترتيب الزمني للحركات
+  transactions.sort((a, b) => a.date - b.date);
+
+  // 3. حساب الرصيد التراكمي
+  let balance = 0;
+  let totalDebit = 0;
+  let totalCredit = 0;
+  
+  let rowsHtml = transactions.map(t => {
+    totalDebit += t.debit;
+    totalCredit += t.credit;
+    balance = balance + t.debit - t.credit;
+    
+    const dStr = t.date.getTime() === 0 ? '-' : t.date.toLocaleDateString('en-CA');
+    
+    return `
+      <tr>
+        <td style="font-weight:bold; color: ${balance > 0 ? '#dc2626' : (balance < 0 ? '#16a34a' : '#000')}">${fmt(balance)}</td>
+        <td class="text-success">${t.credit > 0 ? fmt(t.credit) : '-'}</td>
+        <td class="text-danger">${t.debit > 0 ? fmt(t.debit) : '-'}</td>
+        <td>${t.desc}</td>
+        <td>${t.docNo}</td>
+        <td>${t.type}</td>
+        <td>${dStr}</td>
+      </tr>
+    `;
+  }).join('');
+
+  if (transactions.length === 0) {
+    rowsHtml = `<tr><td colspan="7">لا توجد حركات مسجلة لهذا العميل</td></tr>`;
+  }
+
+  const s = STATE.settings || { name: 'الصيدلية البيطرية' };
+  const now = new Date();
+
+  // 4. بناء هيكل كشف الحساب الاحترافي
+  const statementHtml = `
+    <div class="invoice-wrapper" style="background:#ffffff; color:#000; padding:30px;">
+      <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #cbd5e1; padding-bottom: 15px;">
+        <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a;">كشف حساب عميل مفصل (مباشر)</h2>
+        <p style="margin: 5px 0 0; font-size: 15px; color:#475569;">${s.name}</p>
+      </div>
+      
+      <div class="invoice-header-flex">
+        <div class="inv-customer-side" style="text-align: right;">
+          <h3 style="color: #64748b; font-size: 14px;">بيانات العميل:</h3>
+          <p style="font-weight:900; font-size: 20px; color:#1e40af;">${c.name}</p>
+          <p style="font-size: 14px; color:#000;">الهاتف: ${c.phone || 'غير مسجل'}</p>
+        </div>
+        <div class="inv-details-side" style="color:#000;">
+          <div>تاريخ الإصدار: ${now.toLocaleDateString('en-CA')}</div>
+          <div>وقت الإصدار: ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+          <div style="margin-top: 10px; padding: 5px 10px; background: ${balance > 0 ? '#fef2f2' : '#f0fdf4'}; border: 1px solid ${balance > 0 ? '#fecaca' : '#bbf7d0'}; border-radius: 6px;">
+            الرصيد الحالي: <b style="color: ${balance > 0 ? '#dc2626' : '#16a34a'}">${fmt(balance)} ج.م</b>
+          </div>
+        </div>
+      </div>
+
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>الرصيد التراكمي</th>
+            <th>دائن (له)</th>
+            <th>مدين (عليه)</th>
+            <th>البيان</th>
+            <th>رقم المستند</th>
+            <th>نوع الحركة</th>
+            <th>التاريخ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+        <tfoot>
+          <tr style="background: #f8fafc; font-weight: 900;">
+            <td style="color: ${balance > 0 ? '#dc2626' : '#16a34a'}">${fmt(balance)}</td>
+            <td class="text-success">${fmt(totalCredit)}</td>
+            <td class="text-danger">${fmt(totalDebit)}</td>
+            <td colspan="4" style="text-align: right;">الإجماليات الكلية</td>
+          </tr>
+        </tfoot>
+      </table>
+      
+      ${programmerFooterHTML}
+    </div>
+  `;
+
+  document.getElementById('printableDocument').innerHTML = statementHtml;
+}
+
+// ============ DOWNLOAD UTILITIES ============
+
+function downloadExternalPDF() {
+  const element = document.getElementById('printableDocument');
+  const opt = {
+    margin:       [10, 10, 10, 10],
+    filename:     `Document_${Date.now()}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
+}
+
+function downloadExternalPNG() {
+  const element = document.getElementById('printableDocument');
+  html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = `Document_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+
+// ============ SECURITY & LOGGING ============
+
+async function logScan(type, docId) {
+  try {
+    const { db, ref, push } = await waitFB();
+    const logEntry = {
+      type: type,
+      docId: docId,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent
+    };
+    await push(ref(db, 'scan_logs'), logEntry);
+  } catch (e) {
+    console.error("Failed to log scan", e);
+  }
+}
 </script>
 </body>
-  </html>
+</html>

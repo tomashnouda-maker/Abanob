@@ -64,7 +64,7 @@
   .brand{display:flex;gap:10px;align-items:center;padding:8px 6px 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
   .logo{width:44px;height:44px;border-radius:12px;background:var(--grad);display:grid;place-items:center;font-weight:900;color:white;box-shadow:0 8px 24px rgba(108,140,255,.35)}
   .brand h1{font-size:16px;margin:0;font-weight:800}
-  .brand p{margin:0;font-size:11px;color:var(--muted)}
+  .brand p{margin-top:2px;font-size:13px;font-weight:bold;color:var(--primary)}
   .nav{display:flex;flex-direction:column;gap:6px;margin-top:10px}
   .nav button{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:transparent;color:var(--text);text-align:right;font-weight:600;font-size:14px;transition:.2s;border:1px solid transparent}
   .nav button:hover{background:var(--hover-bg)}
@@ -325,8 +325,8 @@
     <div class="brand">
       <div class="logo">🐾</div>
       <div>
-        <h1>الصيدلية البيطرية</h1>
-        <p>نظام المخزن والكاشير</p>
+        <h1 id="sidebarName">صيدلية بيطرية</h1>
+        <p id="sidebarDoctor" style="font-weight: bold; color: var(--primary); font-size: 13px; margin-top: 2px;">دكتورة ماجدة سامى</p>
       </div>
     </div>
     <nav class="nav">
@@ -541,7 +541,8 @@
       <div class="panel">
         <h3>⚙️ إعدادات المتجر</h3>
         <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
-          <div class="field"><label>اسم المتجر</label><input class="input" id="setName"/></div>
+          <div class="field"><label>اسم الصيدلية</label><input class="input" id="setName"/></div>
+          <div class="field"><label>اسم الدكتورة</label><input class="input" id="setDoctor"/></div>
           <div class="field"><label>الهاتف</label><input class="input" id="setPhone"/></div>
           <div class="field"><label>العنوان</label><input class="input" id="setAddr"/></div>
           <div class="field"><label>عملة</label><input class="input" id="setCurr" value="جنيه"/></div>
@@ -768,7 +769,7 @@ const LS = { get(k, fb){ try{ const v=localStorage.getItem('vp_'+k); return v?JS
 STATE.items     = LS.get('items', {});
 STATE.customers = LS.get('customers', {});
 STATE.invoices  = LS.get('invoices', {});
-STATE.settings  = LS.get('settings', {name:'الصيدلية البيطرية',phone:'',addr:'',curr:'جنيه'});
+STATE.settings  = LS.get('settings', {name:'صيدلية بيطرية', doctor:'دكتورة ماجدة سامى', phone:'',addr:'',curr:'جنيه'});
 const _csCache  = LS.get('cats', null); const _unCache  = LS.get('units', null);
 STATE.cats  = (Array.isArray(_csCache)&&_csCache.length) ? Array.from(new Set([...DEFAULT_CATS, ..._csCache])) : DEFAULT_CATS.slice();
 STATE.units = (Array.isArray(_unCache)&&_unCache.length) ? Array.from(new Set([...DEFAULT_UNITS, ..._unCache])) : DEFAULT_UNITS.slice();
@@ -796,7 +797,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   onValue(ref(db,'items'),s=>{ const v=s.val()||{}; STATE.items=v; LS.set('items',v); renderAll(); });
   onValue(ref(db,'customers'),s=>{ const v=s.val()||{}; STATE.customers=v; LS.set('customers',v); renderAll(); });
   onValue(ref(db,'invoices'),s=>{ const v=s.val()||{}; STATE.invoices=v; LS.set('invoices',v); renderAll(); });
-  onValue(ref(db,'settings'),s=>{ const v=s.val()||STATE.settings; STATE.settings=v; applySettings(); });
+  onValue(ref(db,'settings'),s=>{ 
+    const v=s.val()||STATE.settings; 
+    // التأكد من استبدال الاسم القديم بالاسم الجديد للدكتورة بشكل آلي
+    if(v.name === 'الصيدلية البيطرية' && !v.doctor) {
+        v.name = 'صيدلية بيطرية';
+        v.doctor = 'دكتورة ماجدة سامى';
+    }
+    STATE.settings=v; 
+    applySettings(); 
+  });
 })();
 
 async function checkUrlRouting() {
@@ -846,8 +856,27 @@ async function checkUrlRouting() {
   return false;
 }
 
-function applySettings(){ $('#setName').value=STATE.settings.name||''; $('#setPhone').value=STATE.settings.phone||''; $('#setAddr').value=STATE.settings.addr||''; $('#setCurr').value=STATE.settings.curr||'جنيه'; }
-async function saveSettings(){ const {db,ref,set} = await waitFB(); await set(ref(db,'settings'), {name:$('#setName').value, phone:$('#setPhone').value, addr:$('#setAddr').value, curr:$('#setCurr').value}); toast('تم حفظ الإعدادات'); }
+function applySettings(){ 
+  $('#setName').value = STATE.settings.name || 'صيدلية بيطرية'; 
+  $('#setDoctor').value = STATE.settings.doctor || 'دكتورة ماجدة سامى';
+  $('#setPhone').value = STATE.settings.phone || ''; 
+  $('#setAddr').value = STATE.settings.addr || ''; 
+  $('#setCurr').value = STATE.settings.curr || 'جنيه'; 
+  
+  const sbName = $('#sidebarName'); if(sbName) sbName.textContent = $('#setName').value;
+  const sbDoc = $('#sidebarDoctor'); if(sbDoc) sbDoc.textContent = $('#setDoctor').value;
+}
+async function saveSettings(){ 
+  const {db,ref,set} = await waitFB(); 
+  await set(ref(db,'settings'), {
+    name:$('#setName').value, 
+    doctor:$('#setDoctor').value, 
+    phone:$('#setPhone').value, 
+    addr:$('#setAddr').value, 
+    curr:$('#setCurr').value
+  }); 
+  toast('تم حفظ الإعدادات'); 
+}
 
 function renderAll(){ renderDashboard(); renderInventory(); renderLowStock(); renderCustomers(); renderInvoiceList(); renderPOS(); }
 
@@ -1205,9 +1234,9 @@ function generateInvoiceHTML(inv, s, currentRem, currentBalance, dateStr, timeSt
     <div class="invoice-wrapper" style="background:#ffffff; color:#000;">
       <div class="invoice-header-flex">
         <div class="inv-customer-side">
-          <h3 style="color:#000;">العميل</h3>
-          <p style="font-weight:bold; color:#000;">${inv.customerName}</p>
-          <p style="color:#64748b; font-size: 13px;">${s.name || 'الصيدلية البيطرية'}</p>
+          <h3 style="color:#000;">العميل: <span style="font-weight:bold; color:#000;">${inv.customerName}</span></h3>
+          <h2 style="margin: 10px 0 2px 0; font-size: 18px; font-weight: 900; color:#1e40af;">${s.name || 'صيدلية بيطرية'}</h2>
+          <p style="margin: 0; font-size: 14px; font-weight: 800; color:#047857;">${s.doctor || 'دكتورة ماجدة سامى'}</p>
         </div>
         <div class="inv-details-side" style="color:#000;">
           <div>رقم الفاتورة: <b style="color:#2563eb">${inv.no}</b></div>
@@ -1310,7 +1339,8 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
       </head>
       <body>
         <div class="header">
-          <h3 style="margin:0 0 5px 0">${s.name || 'الصيدلية البيطرية'}</h3>
+          <h2 style="margin:0 0 2px 0; color:#1e40af;">${s.name || 'صيدلية بيطرية'}</h2>
+          <h3 style="margin:0 0 10px 0; color:#047857;">${s.doctor || 'دكتورة ماجدة سامى'}</h3>
           <div>العميل: <b>${inv.customerName}</b></div>
           <div>رقم الفاتورة: <b>${inv.no}</b> (${currentRem > 0 ? 'آجل' : 'نقدي'})</div>
           <div>التاريخ: ${dateStr} | الوقت: ${timeStr}</div>
@@ -1369,7 +1399,8 @@ function showInvoice(inv, prevDebt = 0, custId = ''){
           <div id="load" class="loader">⏳ جاري تحميل كشف الحساب المباشر...</div>
           <div id="content" style="display:none">
             <div class="header">
-              <h3 style="margin:0 0 5px 0" id="biz">${s.name || 'الصيدلية البيطرية'}</h3>
+              <h2 style="margin:0 0 2px 0; color:#1e40af;" id="biz">${s.name || 'صيدلية بيطرية'}</h2>
+              <h3 style="margin:0 0 10px 0; color:#047857;" id="doc">${s.doctor || 'دكتورة ماجدة سامى'}</h3>
               <div>كشف حساب العميل: <b id="cname"></b></div>
               <div id="cphone"></div>
               <div style="margin-top:5px;font-weight:bold;color:#dc2626">الرصيد الحالي المباشر: <span id="curbal">0.00</span> ج.م</div>
@@ -1450,7 +1481,8 @@ function generateReceiptHTML(cName, amt, currentBalance, dateStr, timeStr, isPri
     <div class="invoice-wrapper" style="background:#ffffff; color:#000;">
       <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #cbd5e1; padding-bottom: 15px;">
         <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a;">سند قبض / إيصال سداد</h2>
-        <p style="margin: 5px 0 0; font-size: 15px; color:#475569;">${STATE.settings.name || 'الصيدلية البيطرية'}</p>
+        <h3 style="margin: 10px 0 2px 0; font-size: 20px; font-weight: 900; color:#1e40af;">${STATE.settings.name || 'صيدلية بيطرية'}</h3>
+        <p style="margin: 0; font-size: 16px; font-weight: 800; color:#047857;">${STATE.settings.doctor || 'دكتورة ماجدة سامى'}</p>
       </div>
       
       <div class="invoice-header-flex">
@@ -1523,7 +1555,8 @@ function showReceipt(cName, amt, currentBalance, custId, customDateIso = null) {
       <body>
         <div class="header">
           <h2 style="margin:0;font-size:18px;color:#0f172a">سند قبض / إيصال سداد</h2>
-          <p style="margin:5px 0 0 0;color:#475569">${STATE.settings.name || 'الصيدلية البيطرية'}</p>
+          <h3 style="margin:10px 0 2px 0;font-size:16px;color:#1e40af">${STATE.settings.name || 'صيدلية بيطرية'}</h3>
+          <p style="margin:0 0 10px 0;font-size:14px;color:#047857;font-weight:bold;">${STATE.settings.doctor || 'دكتورة ماجدة سامى'}</p>
         </div>
         <p>استلمنا من السيد/ة: <b style="font-size:14px">${cName}</b></p>
         <div class="box">
@@ -1559,7 +1592,8 @@ function showReceipt(cName, amt, currentBalance, custId, customDateIso = null) {
           <div id="load" class="loader">⏳ جاري تحميل كشف الحساب المباشر...</div>
           <div id="content" style="display:none">
             <div class="header">
-              <h3 style="margin:0 0 5px 0" id="biz">${STATE.settings.name || 'الصيدلية البيطرية'}</h3>
+              <h2 style="margin:0 0 2px 0; color:#1e40af;" id="biz">${STATE.settings.name || 'صيدلية بيطرية'}</h2>
+              <h3 style="margin:0 0 10px 0; color:#047857;" id="doc">${STATE.settings.doctor || 'دكتورة ماجدة سامى'}</h3>
               <div>كشف حساب العميل: <b id="cname"></b></div>
               <div id="cphone"></div>
               <div style="margin-top:5px;font-weight:bold;color:#dc2626">الرصيد الحالي المباشر: <span id="curbal">0.00</span> ج.م</div>
@@ -1749,7 +1783,7 @@ async function renderExternalInvoice(invId) {
   }
   
   const inv = snapshot.val();
-  const s = STATE.settings || { name: 'الصيدلية البيطرية' };
+  const s = STATE.settings || { name: 'صيدلية بيطرية', doctor: 'دكتورة ماجدة سامى' };
   
   // نظراً لأنها فاتورة محفوظة (Snapshot)، نحسب المتبقي بناءً على وقت إنشائها تماماً
   const currentRem = Math.max(0, (+inv.total || 0) - (+inv.paid || 0));
@@ -1863,7 +1897,7 @@ async function renderExternalStatement(custId) {
     rowsHtml = `<tr><td colspan="7">لا توجد حركات مسجلة لهذا العميل</td></tr>`;
   }
 
-  const s = STATE.settings || { name: 'الصيدلية البيطرية' };
+  const s = STATE.settings || { name: 'صيدلية بيطرية', doctor: 'دكتورة ماجدة سامى' };
   const now = new Date();
 
   // 4. بناء هيكل كشف الحساب الاحترافي
@@ -1871,7 +1905,8 @@ async function renderExternalStatement(custId) {
     <div class="invoice-wrapper" style="background:#ffffff; color:#000; padding:30px;">
       <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #cbd5e1; padding-bottom: 15px;">
         <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a;">كشف حساب عميل مفصل (مباشر)</h2>
-        <p style="margin: 5px 0 0; font-size: 15px; color:#475569;">${s.name}</p>
+        <h3 style="margin: 10px 0 2px 0; font-size: 20px; font-weight: 900; color:#1e40af;">${s.name || 'صيدلية بيطرية'}</h3>
+        <p style="margin: 0; font-size: 16px; font-weight: 800; color:#047857;">${s.doctor || 'دكتورة ماجدة سامى'}</p>
       </div>
       
       <div class="invoice-header-flex">
